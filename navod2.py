@@ -102,8 +102,8 @@ def draw_step_0(ax):
 5. Střed trojúhelníku
 
 Použij tlačítka dole pro navigaci →"""
-    
-    ax.text2D(0.5, 0.5, text, transform=ax.transAxes, fontsize=14,
+
+    ax.text2D(0.5, 0.4, text, transform=ax.transAxes, fontsize=12,
               verticalalignment='center', horizontalalignment='center',
               bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.8))
 
@@ -133,9 +133,9 @@ Vrchol 2: (-1, 1,-1)
 Vrchol 7: ( 1, 1, 1)
 
 Z nich vybereme 4 vrcholy."""
-    ax.text2D(0.02, 0.98, text, transform=ax.transAxes, fontsize=10,
-              verticalalignment='top', bbox=dict(boxstyle='round', 
-              facecolor='wheat', alpha=0.8), family='monospace')
+    ax.text2D(0.72, 0.5, text, transform=ax.transAxes, fontsize=10,
+              verticalalignment='center', bbox=dict(boxstyle='round',
+              facecolor='wheat', alpha=0.9), family='monospace')
 
 def draw_step_2(ax):
     """Čtyřstěn - Krok 2: Výběr vrcholů"""
@@ -164,9 +164,9 @@ Vrchol 2: (-1, 1,-1) → (-1)×1×(-1) = 1 ✓
 Vrchol 1: (-1,-1, 1) → (-1)×(-1)×1 = 1 ✓
 
 Žádné dva nejsou sousedé!"""
-    ax.text2D(0.02, 0.98, text, transform=ax.transAxes, fontsize=9,
-              verticalalignment='top', bbox=dict(boxstyle='round', 
-              facecolor='wheat', alpha=0.8), family='monospace')
+    ax.text2D(0.72, 0.5, text, transform=ax.transAxes, fontsize=9,
+              verticalalignment='center', bbox=dict(boxstyle='round',
+              facecolor='wheat', alpha=0.9), family='monospace')
 
 def draw_step_3(ax):
     """Čtyřstěn - Krok 3: Hotovo"""
@@ -198,9 +198,9 @@ d = √[0 + 4 + 4]
 d = √8 = 2√2 ≈ {edge_length:.3f}
 
 Všechny hrany stejně dlouhé ✓"""
-    ax.text2D(0.02, 0.98, text, transform=ax.transAxes, fontsize=10,
-              verticalalignment='top', bbox=dict(boxstyle='round', 
-              facecolor='wheat', alpha=0.8), family='monospace')
+    ax.text2D(0.72, 0.5, text, transform=ax.transAxes, fontsize=10,
+              verticalalignment='center', bbox=dict(boxstyle='round',
+              facecolor='wheat', alpha=0.9), family='monospace')
 
 def draw_step_4(ax):
     """Osmistěn - Krok 1: Osy"""
@@ -228,9 +228,9 @@ def draw_step_4(ax):
 ( 0, -1,  0) -Y
 ( 0,  0,  1) +Z
 ( 0,  0, -1) -Z"""
-    ax.text2D(0.02, 0.98, text, transform=ax.transAxes, fontsize=11,
-              verticalalignment='top', bbox=dict(boxstyle='round', 
-              facecolor='wheat', alpha=0.8), family='monospace')
+    ax.text2D(0.72, 0.5, text, transform=ax.transAxes, fontsize=11,
+              verticalalignment='center', bbox=dict(boxstyle='round',
+              facecolor='wheat', alpha=0.9), family='monospace')
 
 def draw_step_5(ax):
     """Osmistěn - Krok 2: Hotovo"""
@@ -264,9 +264,9 @@ def draw_step_5(ax):
 Délka hrany:
 d = √[(1-0)² + (0-1)² + (0-0)²]
 d = √2 ≈ {edge_length:.3f}"""
-    ax.text2D(0.02, 0.98, text, transform=ax.transAxes, fontsize=11,
-              verticalalignment='top', bbox=dict(boxstyle='round', 
-              facecolor='wheat', alpha=0.8), family='monospace')
+    ax.text2D(0.72, 0.5, text, transform=ax.transAxes, fontsize=11,
+              verticalalignment='center', bbox=dict(boxstyle='round',
+              facecolor='wheat', alpha=0.9), family='monospace')
 
 def draw_step_6(ax):
     """Dvacetistěn - Krok 1: První obdélník"""
@@ -299,9 +299,9 @@ Poměr: φ
 
 Vrcholy:
 (0, ±1, ±φ)"""
-    ax.text2D(0.02, 0.98, text, transform=ax.transAxes, fontsize=11,
-              verticalalignment='top', bbox=dict(boxstyle='round', 
-              facecolor='wheat', alpha=0.8), family='monospace')
+    ax.text2D(0.72, 0.5, text, transform=ax.transAxes, fontsize=11,
+              verticalalignment='center', bbox=dict(boxstyle='round',
+              facecolor='wheat', alpha=0.9), family='monospace')
 
 def draw_step_7(ax):
     """Dvacetistěn - Krok 2: Tři obdélníky"""
@@ -339,9 +339,9 @@ Zelený (XZ): (±1, ±φ, 0)
 Modrý (XY): (±φ, 0, ±1)
 
 Celkem: 12 vrcholů"""
-    ax.text2D(0.02, 0.98, text, transform=ax.transAxes, fontsize=10,
-              verticalalignment='top', bbox=dict(boxstyle='round', 
-              facecolor='wheat', alpha=0.8), family='monospace')
+    ax.text2D(0.72, 0.5, text, transform=ax.transAxes, fontsize=10,
+              verticalalignment='center', bbox=dict(boxstyle='round',
+              facecolor='wheat', alpha=0.9), family='monospace')
 
 def draw_step_8(ax):
     """Dvacetistěn - Krok 3: Hotovo"""
@@ -379,9 +379,9 @@ def draw_step_8(ax):
 
 Délka hrany = 2
 (díky zlatému řezu!)"""
-    ax.text2D(0.02, 0.98, text, transform=ax.transAxes, fontsize=11,
-              verticalalignment='top', bbox=dict(boxstyle='round', 
-              facecolor='wheat', alpha=0.8), family='monospace')
+    ax.text2D(0.72, 0.5, text, transform=ax.transAxes, fontsize=11,
+              verticalalignment='center', bbox=dict(boxstyle='round',
+              facecolor='wheat', alpha=0.9), family='monospace')
 
 def draw_step_9(ax):
     """Dvanáctistěn - Krok 1: Krychle"""
@@ -405,9 +405,9 @@ def draw_step_9(ax):
 Dvanáctistěn má 20 vrcholů,
 takže potřebujeme přidat
 ještě 12!"""
-    ax.text2D(0.02, 0.98, text, transform=ax.transAxes, fontsize=11,
-              verticalalignment='top', bbox=dict(boxstyle='round', 
-              facecolor='wheat', alpha=0.8), family='monospace')
+    ax.text2D(0.72, 0.5, text, transform=ax.transAxes, fontsize=11,
+              verticalalignment='center', bbox=dict(boxstyle='round',
+              facecolor='wheat', alpha=0.9), family='monospace')
 
 def draw_step_10(ax):
     """Dvanáctistěn - Krok 2: Přidání vrcholů - VYLEPŠENÉ VYSVĚTLENÍ"""
@@ -477,14 +477,14 @@ PŘÍKLAD (červený obdélník v rovině YZ):
 
 CELKEM 3 takové obdélníky:
 1) Rovina YZ (x=0): (0, ±1/φ, ±φ)    → 4 vrcholy
-2) Rovina XZ (y=0): (±1/φ, ±φ, 0)    → 4 vrcholy  
+2) Rovina XZ (y=0): (±1/φ, ±φ, 0)    → 4 vrcholy
 3) Rovina XY (z=0): (±φ, 0, ±1/φ)    → 4 vrcholy
 
 CELKEM: 4 + 4 + 4 = 12 nových vrcholů!
 Spolu s krychlí: 8 + 12 = 20 vrcholů"""
-    
-    ax.text2D(0.02, 0.98, text, transform=ax.transAxes, fontsize=9,
-              verticalalignment='top', bbox=dict(boxstyle='round', 
+
+    ax.text2D(0.72, 0.5, text, transform=ax.transAxes, fontsize=8,
+              verticalalignment='center', bbox=dict(boxstyle='round',
               facecolor='wheat', alpha=0.9), family='monospace')
 
 def draw_step_11(ax):
@@ -548,24 +548,24 @@ def draw_step_11(ax):
     text = f"""Tři obdélníky kolmé na sebe:
 φ = {phi:.3f}, 1/φ = {1/phi:.3f}
 
-🔴 ČERVENÝ (rovina YZ, x=0):
+ČERVENÝ (rovina YZ, x=0):
    (0, ±1/φ, ±φ) → 4 vrcholy
-   
-🟢 ZELENÝ (rovina XZ, y=0):
+
+ZELENÝ (rovina XZ, y=0):
    (±1/φ, ±φ, 0) → 4 vrcholy
-   
-🔵 MODRÝ (rovina XY, z=0):
+
+MODRÝ (rovina XY, z=0):
    (±φ, 0, ±1/φ) → 4 vrcholy
 
 Každý obdélník má:
 - Kratší stranu: 2/φ ≈ {2/phi:.2f}
-- Delší stranu: 2φ ≈ {2*phi:.2f}  
+- Delší stranu: 2φ ≈ {2*phi:.2f}
 - Poměr stran: φ (zlatý řez!)
 
 CELKEM: 4+4+4 = 12 vrcholů"""
-    
-    ax.text2D(0.02, 0.98, text, transform=ax.transAxes, fontsize=9,
-              verticalalignment='top', bbox=dict(boxstyle='round', 
+
+    ax.text2D(0.72, 0.5, text, transform=ax.transAxes, fontsize=8,
+              verticalalignment='center', bbox=dict(boxstyle='round',
               facecolor='lightyellow', alpha=0.9), family='monospace')
 
 
@@ -603,9 +603,9 @@ def draw_step_12(ax):
 
 Délka hrany:
 d = 2/φ ≈ {2/phi:.3f}"""
-    ax.text2D(0.02, 0.98, text, transform=ax.transAxes, fontsize=11,
-              verticalalignment='top', bbox=dict(boxstyle='round', 
-              facecolor='wheat', alpha=0.8), family='monospace')
+    ax.text2D(0.72, 0.5, text, transform=ax.transAxes, fontsize=11,
+              verticalalignment='center', bbox=dict(boxstyle='round',
+              facecolor='wheat', alpha=0.9), family='monospace')
 
 def draw_step_13(ax):
     """Bonus: Střed trojúhelníku"""
@@ -642,9 +642,9 @@ B = ({B[0]:.1f}, {B[1]:.1f}, {B[2]:.1f})
 C = ({C[0]:.1f}, {C[1]:.1f}, {C[2]:.1f})
 
 T = ({center[0]:.2f}, {center[1]:.2f}, {center[2]:.2f})"""
-    ax.text2D(0.02, 0.98, text, transform=ax.transAxes, fontsize=10,
-              verticalalignment='top', bbox=dict(boxstyle='round', 
-              facecolor='wheat', alpha=0.8), family='monospace')
+    ax.text2D(0.72, 0.5, text, transform=ax.transAxes, fontsize=10,
+              verticalalignment='center', bbox=dict(boxstyle='round',
+              facecolor='wheat', alpha=0.9), family='monospace')
 
 # =============================================================================
 # HLAVNÍ TŘÍDA PRO NAVIGACI
@@ -672,22 +672,23 @@ class StepNavigator:
             draw_step_13   # 13: Bonus - střed
         ]
         
-        # Vytvoř figure a osu
-        self.fig = plt.figure(figsize=(14, 10))
-        self.ax = self.fig.add_subplot(111, projection='3d')
-        
-        # Přidej tlačítka
-        ax_prev = plt.axes([0.3, 0.02, 0.15, 0.05])
-        ax_next = plt.axes([0.55, 0.02, 0.15, 0.05])
-        
+        # Vytvoř figure a osu - zmenšena velikost pro lepší zobrazení
+        self.fig = plt.figure(figsize=(12, 8))
+        # 3D plot zabírá levou část obrazovky (60%)
+        self.ax = self.fig.add_subplot(111, projection='3d', position=[0.05, 0.12, 0.55, 0.75])
+
+        # Přidej tlačítka - upraveno pro nový layout
+        ax_prev = plt.axes([0.25, 0.03, 0.15, 0.05])
+        ax_next = plt.axes([0.45, 0.03, 0.15, 0.05])
+
         self.btn_prev = Button(ax_prev, 'Předchozí')
         self.btn_next = Button(ax_next, 'Další')
-        
+
         self.btn_prev.on_clicked(self.prev_step)
         self.btn_next.on_clicked(self.next_step)
-        
-        # Přidej informaci o kroku
-        self.step_text = self.fig.text(0.5, 0.95, '', ha='center', 
+
+        # Přidej informaci o kroku - upraveno pro nový layout
+        self.step_text = self.fig.text(0.35, 0.93, '', ha='center',
                                        fontsize=12, fontweight='bold')
         
         # Nakresli první krok
