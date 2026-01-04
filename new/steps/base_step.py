@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Dict, Any, Optional
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
+import plotly.graph_objects as go
 
 
 @dataclass
@@ -25,7 +26,8 @@ class Step(ABC):
     Každý krok musí implementovat:
     - get_metadata(): metadata o kroku
     - get_description(): popisný text v češtině
-    - render_diagram(): vykreslení matplotlib diagramu
+    - render_diagram(): vykreslení matplotlib diagramu (legacy)
+    - render_plotly_diagram(): vykreslení interaktivního Plotly diagramu
     """
 
     def __init__(self):
@@ -61,11 +63,21 @@ class Step(ABC):
     @abstractmethod
     def render_diagram(self, fig: Figure, ax) -> None:
         """
-        Vykreslí 3D diagram pro tento krok
+        Vykreslí 3D diagram pro tento krok (matplotlib - legacy)
 
         Args:
             fig: Matplotlib Figure instance
             ax: Matplotlib 3D Axes instance
+        """
+        pass
+
+    @abstractmethod
+    def render_plotly_diagram(self) -> go.Figure:
+        """
+        Vykreslí interaktivní 3D diagram pomocí Plotly
+
+        Returns:
+            Plotly Figure instance s interaktivním 3D diagramem
         """
         pass
 
