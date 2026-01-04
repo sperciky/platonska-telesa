@@ -110,11 +110,34 @@ class DualityNestedOctahedra(Step):
                 if shared == 2:
                     self.inner_octa_edges.append((i, j))
 
-        # Stěny vnitřního osmistěnu (8 trojúhelníků)
-        self.inner_octa_faces = [
-            [0, 2, 4], [0, 4, 3], [0, 3, 5], [0, 5, 2],
-            [1, 4, 2], [1, 3, 4], [1, 5, 3], [1, 2, 5]
-        ]
+        # Stěny vnitřního osmistěnu - najdeme je dynamicky
+        self.inner_octa_faces = self._find_octahedron_faces()
+
+    def _find_octahedron_faces(self):
+        """Najde 8 trojúhelníkových stěn vnitřního osmistěnu na základě hran"""
+        # Vytvoř adjacenční seznam z hran
+        adjacency = {i: set() for i in range(len(self.inner_octa_vertices))}
+        for i, j in self.inner_octa_edges:
+            adjacency[i].add(j)
+            adjacency[j].add(i)
+
+        faces = []
+        visited_faces = set()
+
+        # Pro každou hranu najdi všechny trojúhelníky, které ji obsahují
+        for edge in self.inner_octa_edges:
+            i, j = edge
+            # Najdi vrcholy sousedící s oběma vrcholy hrany
+            common_neighbors = adjacency[i] & adjacency[j]
+
+            for k in common_neighbors:
+                # Vytvoř trojúhelník (i, j, k)
+                face = tuple(sorted([i, j, k]))
+                if face not in visited_faces:
+                    visited_faces.add(face)
+                    faces.append(list(face))
+
+        return faces
 
     def get_metadata(self) -> StepMetadata:
         return StepMetadata(
