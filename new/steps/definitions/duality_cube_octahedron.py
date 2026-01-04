@@ -158,12 +158,12 @@ Krychle a osmistěn jsou **duální tělesa**:
         fig = PlotlyRenderer3D.create_figure(axis_limits=(-2, 2))
         fig = PlotlyRenderer3D.add_title(fig, self.metadata.title)
 
-        # Nakresli stěny osmistěnu, pokud je to zapnuté (azurová)
+        # Nakresli stěny osmistěnu, pokud je to zapnuté (modrá)
         if st.session_state.get('show_faces', False):
             opacity = st.session_state.get('face_opacity', 0.5)
             fig = PlotlyRenderer3D.add_faces(
                 fig, self.octa_vertices, self.octa_faces,
-                color='#00CED1', opacity=opacity
+                color='blue', opacity=opacity
             )
 
         # Nakresli hrany krychle (zelená)

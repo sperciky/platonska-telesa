@@ -210,10 +210,10 @@ Dvacetistěn a dvanáctistěn tvoří **duální pár** - nejvíce komplexní ze
             color='orange', width=2
         )
 
-        # Nakresli hrany dvanáctistěnu (zelená)
+        # Nakresli hrany dvanáctistěnu (červená)
         Renderer3D.draw_edges(
             ax, self.dodeca_vertices, self.dodeca_edges,
-            color='green', width=2.5
+            color='red', width=2.5
         )
 
         # Nakresli vrcholy dvacetistěnu (oranžová)
@@ -233,16 +233,16 @@ Dvacetistěn a dvanáctistěn tvoří **duální pár** - nejvíce komplexní ze
         if st.session_state.get('show_faces', False):
             opacity = st.session_state.get('face_opacity', 0.5)
 
-            # Dvacetistěn - žlutá velmi průhledná
+            # Dvacetistěn - oranžová velmi průhledná
             fig = PlotlyRenderer3D.add_faces(
                 fig, self.icosa_vertices, self.icosa_faces,
-                color='#FFD700', opacity=opacity * 0.3
+                color='orange', opacity=opacity * 0.3
             )
 
-            # Dvanáctistěn - zelená
+            # Dvanáctistěn - červená
             fig = PlotlyRenderer3D.add_faces(
                 fig, self.dodeca_vertices, self.dodeca_faces,
-                color='#00FF00', opacity=opacity
+                color='red', opacity=opacity
             )
 
         # Nakresli hrany dvacetistěnu (oranžová)
@@ -252,10 +252,10 @@ Dvacetistěn a dvanáctistěn tvoří **duální pár** - nejvíce komplexní ze
             color='orange', width=edge_width
         )
 
-        # Nakresli hrany dvanáctistěnu (zelená)
+        # Nakresli hrany dvanáctistěnu (červená)
         fig = PlotlyRenderer3D.add_edges(
             fig, self.dodeca_vertices, self.dodeca_edges,
-            color='green', width=edge_width
+            color='red', width=edge_width
         )
 
         # Nakresli vrcholy dvacetistěnu (oranžová)
