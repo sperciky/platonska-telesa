@@ -115,12 +115,14 @@ def render_step_navigation(position="top"):
                 st.rerun()
 
 
-def create_3d_figure(step):
+def create_3d_figure(step, elevation=None, azimuth=None):
     """
     Vytvoří matplotlib 3D figure pro daný krok
 
     Args:
         step: Instance kroku
+        elevation: Úhel elevace (nahoru/dolů) v stupních
+        azimuth: Úhel azimutu (otočení) v stupních
 
     Returns:
         matplotlib Figure
@@ -132,6 +134,14 @@ def create_3d_figure(step):
 
     # Nech krok vykreslit diagram
     step.render_diagram(fig, ax)
+
+    # Nastav úhel pohledu, pokud je specifikován
+    if elevation is not None or azimuth is not None:
+        current_elev, current_azim = ax.elev, ax.azim
+        ax.view_init(
+            elev=elevation if elevation is not None else current_elev,
+            azim=azimuth if azimuth is not None else current_azim
+        )
 
     return fig
 
@@ -154,7 +164,31 @@ def render_main_content():
     # Levý sloupec - 3D diagram
     with col_diagram:
         st.markdown("### 🔷 3D Diagram")
-        fig = create_3d_figure(step)
+
+        # Ovládání rotace
+        with st.expander("🔄 Otáčení diagramu", expanded=False):
+            col_elev, col_azim = st.columns(2)
+            with col_elev:
+                elevation = st.slider(
+                    "Elevace (nahoru/dolů)",
+                    min_value=-90,
+                    max_value=90,
+                    value=20,
+                    step=5,
+                    key=f"elev_{st.session_state.current_step}"
+                )
+            with col_azim:
+                azimuth = st.slider(
+                    "Azimut (otočení)",
+                    min_value=0,
+                    max_value=360,
+                    value=45,
+                    step=5,
+                    key=f"azim_{st.session_state.current_step}"
+                )
+
+        # Vytvoř figure s nastaveným úhlem pohledu
+        fig = create_3d_figure(step, elevation=elevation, azimuth=azimuth)
         st.pyplot(fig, use_container_width=True)
         plt.close(fig)  # Uvolni paměť
 
