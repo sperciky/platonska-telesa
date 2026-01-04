@@ -200,36 +200,36 @@ Zkus se podívat na diagram vlevo a ověř si, že:
         self.setup_axes(ax)
         ax.set_title(self.metadata.title, fontsize=14, fontweight='bold')
 
-        # Nakresli hrany krychle
+        # Nakresli hrany krychle - oranžová barva
         Renderer3D.draw_edges(
             ax, self.cube_vertices, self.cube_edges,
-            color='lightgray', width=1, style='--', alpha=0.3
+            color='orange', width=2
         )
 
-        # Nakresli vrcholy - vybrané červeně, ostatní šedě
+        # Nakresli vrcholy - vybrané červeně (větší), ostatní oranžově (menší)
         for i, v in enumerate(self.cube_vertices):
             if i in self.tetra_indices:
                 Renderer3D.draw_point(ax, v, color='red', size=150, label=str(i))
             else:
-                Renderer3D.draw_point(ax, v, color='lightgray', size=60, label=str(i))
+                Renderer3D.draw_point(ax, v, color='orange', size=60, label=str(i))
 
     def render_plotly_diagram(self) -> go.Figure:
         """Vykreslení krychle s označenými vrcholy (Plotly - interaktivní)"""
         fig = PlotlyRenderer3D.create_figure(axis_limits=(-2, 2))
         fig = PlotlyRenderer3D.add_title(fig, self.metadata.title)
 
-        # Nakresli hrany krychle
+        # Nakresli hrany krychle - oranžová barva
         fig = PlotlyRenderer3D.add_edges(
             fig, self.cube_vertices, self.cube_edges,
-            color='lightgray', width=2, dash='dash'
+            color='orange', width=3
         )
 
-        # Nakresli vrcholy - vybrané červeně, ostatní šedě
+        # Nakresli vrcholy - vybrané červeně (větší), ostatní oranžově (menší)
         for i, v in enumerate(self.cube_vertices):
             if i in self.tetra_indices:
                 fig = PlotlyRenderer3D.add_point(fig, v, color='red', size=15, label=str(i))
             else:
-                fig = PlotlyRenderer3D.add_point(fig, v, color='lightgray', size=6, label=str(i))
+                fig = PlotlyRenderer3D.add_point(fig, v, color='orange', size=8, label=str(i))
 
         return fig
 
