@@ -70,6 +70,13 @@ def initialize_session_state():
     if 'current_step' not in st.session_state:
         st.session_state.current_step = 0
 
+    # Nastavení pro vykreslování stěn
+    if 'show_faces' not in st.session_state:
+        st.session_state.show_faces = False
+
+    if 'face_opacity' not in st.session_state:
+        st.session_state.face_opacity = 0.3
+
 
 def render_sidebar():
     """Vykreslí sidebar s navigací"""
@@ -93,6 +100,28 @@ def render_sidebar():
                 st.session_state.current_step = step_num
 
         st.sidebar.markdown("")  # Mezera mezi kategoriemi
+
+    # Nastavení vykreslování stěn
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("🎨 Nastavení zobrazení")
+
+    # Checkbox pro zobrazení stěn
+    st.session_state.show_faces = st.sidebar.checkbox(
+        "Zobrazit stěny těles",
+        value=st.session_state.show_faces,
+        help="Zapne/vypne vykreslování stěn 3D těles"
+    )
+
+    # Slider pro průhlednost (pouze pokud jsou stěny zapnuté)
+    if st.session_state.show_faces:
+        st.session_state.face_opacity = st.sidebar.slider(
+            "Průhlednost stěn",
+            min_value=0.0,
+            max_value=1.0,
+            value=st.session_state.face_opacity,
+            step=0.05,
+            help="0.0 = průhledné, 1.0 = neprůhledné"
+        )
 
     # Informace na konci sidebaru
     st.sidebar.markdown("---")

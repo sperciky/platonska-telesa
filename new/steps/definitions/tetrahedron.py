@@ -5,6 +5,7 @@ Tetrahedron construction steps
 import numpy as np
 from matplotlib.figure import Figure
 import plotly.graph_objects as go
+import streamlit as st
 from steps.base_step import Step, StepMetadata
 from views.renderer import Renderer3D
 from views.plotly_renderer import PlotlyRenderer3D
@@ -252,6 +253,14 @@ class TetraStep3_Complete(Step):
             (1, 2), (1, 3), (2, 3)
         ]
 
+        # Stěny čtyřstěnu (4 trojúhelníky)
+        self.tetra_faces = [
+            [0, 1, 2],  # Stěna ABC
+            [0, 1, 3],  # Stěna ABD
+            [0, 2, 3],  # Stěna ACD
+            [1, 2, 3]   # Stěna BCD
+        ]
+
     def get_metadata(self) -> StepMetadata:
         return StepMetadata(
             number=3,
@@ -335,6 +344,14 @@ Můžeš si ověřit, že vzdálenost mezi **jakýmikoliv dvěma** vrcholy je v�
         """Vykreslení hotového čtyřstěnu (Plotly - interaktivní)"""
         fig = PlotlyRenderer3D.create_figure(axis_limits=(-2, 2))
         fig = PlotlyRenderer3D.add_title(fig, self.metadata.title)
+
+        # Nakresli stěny, pokud je to zapnuté
+        if st.session_state.get('show_faces', False):
+            opacity = st.session_state.get('face_opacity', 0.3)
+            fig = PlotlyRenderer3D.add_faces(
+                fig, self.tetra_vertices, self.tetra_faces,
+                color='cyan', opacity=opacity
+            )
 
         # Nakresli hrany čtyřstěnu
         fig = PlotlyRenderer3D.add_edges(
