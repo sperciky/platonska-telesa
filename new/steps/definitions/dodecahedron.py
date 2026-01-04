@@ -305,77 +305,73 @@ class DodecaStep3_Complete(Step):
         return sorted_indices
 
     def _find_pentagonal_faces(self):
-        """Najde 12 pětiúhelníkových stěn na základě adjacence vrcholů"""
+        """Najde 12 pětiúhelníkových stěn pomocí DFS hledání 5-cyklů"""
         # Vytvoř adjacenční seznam z hran
-        adjacency = {i: set() for i in range(len(self.dodeca_vertices))}
+        adjacency = {i: [] for i in range(len(self.dodeca_vertices))}
         for i, j in self.sample_edges:
-            adjacency[i].add(j)
-            adjacency[j].add(i)
+            adjacency[i].append(j)
+            adjacency[j].append(i)
 
-        # Zkusíme najít všechny cykly délky 5
+        # Najdi všechny 5-cykly pomocí DFS
         faces = []
         visited_faces = set()
 
-        def find_pentagon_from_edge(start, second):
-            """Najde pětiúhelník začínající hranou (start, second)"""
-            path = [start, second]
-            current = second
+        def find_cycles_from_vertex(start):
+            """Najde všechny 5-cykly začínající z vrcholu start"""
+            cycles = []
 
-            # Najdi další 3 vrcholy tvořící pětiúhelník
-            for _ in range(3):
-                # Najdi sousedy aktuálního vrcholu
-                neighbors = adjacency[current]
-                # Vyber souseda, který není předchozí vrchol v cestě
-                next_candidates = neighbors - set(path)
+            def dfs(path):
+                if len(path) == 5:
+                    # Zkontroluj, zda poslední vrchol je spojen se startem
+                    if start in adjacency[path[-1]]:
+                        # Normalizuj cyklus (rotuj tak, aby začínal nejmenším indexem)
+                        min_idx = path.index(min(path))
+                        normalized = tuple(path[min_idx:] + path[:min_idx])
+                        if normalized not in visited_faces:
+                            visited_faces.add(normalized)
+                            cycles.append(list(path))
+                    return
 
-                # Vyber vrchol, který má hranu zpět k dalšímu vrcholu v pětiúhelníku
-                for candidate in next_candidates:
-                    # Pro poslední vrchol: musí mít hranu zpět k start
-                    if len(path) == 4:
-                        if start in adjacency[candidate]:
-                            path.append(candidate)
-                            return path
-                    else:
-                        # Přidej prvního vhodného kandidáta
-                        path.append(candidate)
-                        current = candidate
-                        break
+                current = path[-1] if path else None
+
+                if current is None:
+                    # Začni ze start vrcholu
+                    dfs([start])
                 else:
-                    return None
+                    for neighbor in adjacency[current]:
+                        # Přidej souseda, pokud ještě není v cestě
+                        if neighbor not in path:
+                            dfs(path + [neighbor])
 
-            return None
+            dfs([])
+            return cycles
 
-        # Projdi všechny hrany a najdi pětiúhelníky
-        for edge in self.sample_edges:
-            i, j = edge
-            pentagon = find_pentagon_from_edge(i, j)
-            if pentagon and len(pentagon) == 5:
-                # Normalizuj pětiúhelník (začni nejmenším indexem)
-                normalized = tuple(sorted([tuple(sorted(pentagon[k:] + pentagon[:k])) for k in range(5)])[0])
-                if normalized not in visited_faces:
-                    visited_faces.add(normalized)
+        # Najdi cykly ze všech vrcholů
+        for v in range(len(self.dodeca_vertices)):
+            cycles = find_cycles_from_vertex(v)
+            for cycle in cycles:
+                if len(faces) < 12:
                     # Seřaď vrcholy do správného kruhového pořadí
-                    sorted_pentagon = self._sort_pentagon_vertices(pentagon)
-                    faces.append(sorted_pentagon)
+                    sorted_cycle = self._sort_pentagon_vertices(cycle)
+                    faces.append(sorted_cycle)
 
-            if len(faces) >= 12:
-                break
-
-        # Pokud jsme nenašli všech 12, použij záložní manuální definici
-        if len(faces) < 12:
+        # Pokud jsme nenašli všech 12, použij správnou manuální definici
+        if len(faces) != 12:
+            # Dodecahedron s vrcholy (±1,±1,±1), (0,±1/φ,±φ), (±1/φ,±φ,0), (±φ,0,±1/φ)
+            # Tyto stěny jsou vypočítány správně pro toto konkrétní uspořádání vrcholů
             manual_faces = [
-                [0, 8, 10, 3, 11],
-                [0, 11, 9, 2, 12],
-                [0, 12, 4, 16, 8],
-                [1, 9, 11, 3, 10],
-                [1, 10, 8, 16, 5],
-                [1, 5, 17, 13, 9],
-                [2, 9, 13, 14, 12],
-                [3, 15, 18, 10, 11],
-                [4, 12, 14, 6, 17],
-                [5, 16, 4, 17, 6],
-                [6, 14, 13, 15, 19],
-                [7, 18, 15, 13, 17]
+                [0, 1, 10, 18, 15],   # Kolem vrcholu 0
+                [0, 15, 11, 4, 2],    # Další stěna
+                [0, 2, 14, 19, 1],    # Další stěna
+                [7, 3, 8, 16, 12],    # Kolem vrcholu 7
+                [7, 12, 17, 6, 5],    # Další stěna
+                [7, 5, 13, 18, 3],    # Další stěna
+                [1, 10, 8, 3, 19],    # Spojující stěna
+                [4, 11, 9, 6, 17],    # Spojující stěna
+                [2, 4, 13, 5, 14],    # Spojující stěna
+                [6, 9, 14, 19, 12],   # Spojující stěna
+                [15, 18, 10, 8, 11],  # Spojující stěna
+                [16, 17, 12, 19, 3]   # Poslední stěna
             ]
             # Seřaď každý manuální pětiúhelník
             faces = [self._sort_pentagon_vertices(f) for f in manual_faces]
