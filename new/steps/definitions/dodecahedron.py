@@ -281,6 +281,29 @@ class DodecaStep3_Complete(Step):
         # Najdeme je dynamicky na základě grafu hran
         self.dodeca_faces = self._find_pentagonal_faces()
 
+    def _sort_pentagon_vertices(self, pentagon_indices):
+        """Seřadí vrcholy pětiúhelníku do správného kruhového pořadí"""
+        vertices = self.dodeca_vertices
+        center = np.mean([vertices[i] for i in pentagon_indices], axis=0)
+
+        # Vektor od středu k prvnímu vrcholu
+        v0 = vertices[pentagon_indices[0]] - center
+        v1 = vertices[pentagon_indices[1]] - center
+        normal = np.cross(v0, v1)
+        if np.linalg.norm(normal) > 0:
+            normal = normal / np.linalg.norm(normal)
+        else:
+            normal = np.array([0, 0, 1])
+
+        def angle_from_center(idx):
+            v = vertices[idx] - center
+            v_proj = v - np.dot(v, normal) * normal
+            angle = np.arctan2(np.dot(np.cross(v0, v_proj), normal), np.dot(v0, v_proj))
+            return angle
+
+        sorted_indices = sorted(pentagon_indices, key=angle_from_center)
+        return sorted_indices
+
     def _find_pentagonal_faces(self):
         """Najde 12 pětiúhelníkových stěn na základě adjacence vrcholů"""
         # Vytvoř adjacenční seznam z hran
@@ -331,14 +354,16 @@ class DodecaStep3_Complete(Step):
                 normalized = tuple(sorted([tuple(sorted(pentagon[k:] + pentagon[:k])) for k in range(5)])[0])
                 if normalized not in visited_faces:
                     visited_faces.add(normalized)
-                    faces.append(list(pentagon))
+                    # Seřaď vrcholy do správného kruhového pořadí
+                    sorted_pentagon = self._sort_pentagon_vertices(pentagon)
+                    faces.append(sorted_pentagon)
 
             if len(faces) >= 12:
                 break
 
         # Pokud jsme nenašli všech 12, použij záložní manuální definici
         if len(faces) < 12:
-            faces = [
+            manual_faces = [
                 [0, 8, 10, 3, 11],
                 [0, 11, 9, 2, 12],
                 [0, 12, 4, 16, 8],
@@ -352,6 +377,8 @@ class DodecaStep3_Complete(Step):
                 [6, 14, 13, 15, 19],
                 [7, 18, 15, 13, 17]
             ]
+            # Seřaď každý manuální pětiúhelník
+            faces = [self._sort_pentagon_vertices(f) for f in manual_faces]
 
         return faces[:12]
 
