@@ -75,7 +75,10 @@ def initialize_session_state():
         st.session_state.show_faces = False
 
     if 'face_opacity' not in st.session_state:
-        st.session_state.face_opacity = 0.3
+        st.session_state.face_opacity = 0.5
+
+    if 'face_color' not in st.session_state:
+        st.session_state.face_color = '#00CED1'  # DarkTurquoise (výrazná azurová)
 
 
 def render_sidebar():
@@ -112,8 +115,14 @@ def render_sidebar():
         help="Zapne/vypne vykreslování stěn 3D těles"
     )
 
-    # Slider pro průhlednost (pouze pokud jsou stěny zapnuté)
+    # Nastavení barvy a průhlednosti (pouze pokud jsou stěny zapnuté)
     if st.session_state.show_faces:
+        st.session_state.face_color = st.sidebar.color_picker(
+            "Barva stěn",
+            value=st.session_state.face_color,
+            help="Vyber barvu pro stěny těles"
+        )
+
         st.session_state.face_opacity = st.sidebar.slider(
             "Průhlednost stěn",
             min_value=0.0,
