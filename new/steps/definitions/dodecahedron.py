@@ -206,13 +206,26 @@ Podobně jako u dvacetistěnu, použijeme **zlatý řez φ = {PHI:.3f}**
         fig = PlotlyRenderer3D.create_figure(axis_limits=(-2, 2))
         fig = PlotlyRenderer3D.add_title(fig, self.metadata.title)
 
+        # Nakresli stěny obdélníků, pokud je to zapnuté
+        if st.session_state.get('show_faces', False):
+            opacity = st.session_state.get('face_opacity', 0.5)
+            rect_colors = ['red', 'green', 'blue']
+
+            for rect_idx, color in zip(self.rectangles, rect_colors):
+                # Čtyřúhelník - použij indexy přímo
+                face = [rect_idx[0], rect_idx[1], rect_idx[2], rect_idx[3]]
+                fig = PlotlyRenderer3D.add_face(
+                    fig, self.dodeca_vertices, face,
+                    color=color, opacity=opacity
+                )
+
         # Nakresli hrany krychle (oranžová)
         fig = PlotlyRenderer3D.add_edges(
             fig, self.dodeca_vertices, self.cube_edges,
             color='orange', width=3
         )
 
-        # Nakresli obdélníky
+        # Nakresli hrany obdélníků
         rect_colors = ['red', 'green', 'blue']
         for rect_idx, color in zip(self.rectangles, rect_colors):
             edges = [
