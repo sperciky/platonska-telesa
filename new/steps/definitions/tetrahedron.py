@@ -97,15 +97,15 @@ Krychle je skvělý výchozí bod, protože:
         # Nakresli hrany krychle
         Renderer3D.draw_edges(
             ax, self.cube_vertices, self.cube_edges,
-            color='gray', width=1, style='--', alpha=0.4
+            color='orange', width=2
         )
 
         # Nakresli vrcholy
         labels = [str(i) for i in range(8)]
         Renderer3D.draw_points(
             ax, self.cube_vertices,
-            colors='lightgray',
-            sizes=80,
+            colors='orange',
+            sizes=120,
             labels=labels
         )
 
@@ -117,15 +117,15 @@ Krychle je skvělý výchozí bod, protože:
         # Nakresli hrany krychle
         fig = PlotlyRenderer3D.add_edges(
             fig, self.cube_vertices, self.cube_edges,
-            color='gray', width=2, dash='dash'
+            color='orange', width=3
         )
 
         # Nakresli vrcholy
         labels = [str(i) for i in range(8)]
         fig = PlotlyRenderer3D.add_points(
             fig, self.cube_vertices,
-            colors='lightgray',
-            sizes=8,
+            colors='orange',
+            sizes=12,
             labels=labels
         )
 

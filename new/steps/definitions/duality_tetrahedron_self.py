@@ -204,12 +204,12 @@ Z = S - 3*E
             Renderer3D.draw_edge(ax, self.middle_tetra[i], self.middle_tetra[j],
                                color='orange', width=2.5)
 
-        # Vnitřní čtyřstěn - zelené hrany
+        # Vnitřní čtyřstěn - červené hrany
         inner_edges = [(0,1), (0,2), (0,3), (1,2), (1,3), (2,3)]
         for edge in inner_edges:
             i, j = edge
             Renderer3D.draw_edge(ax, self.inner_tetra[i], self.inner_tetra[j],
-                               color='green', width=3)
+                               color='red', width=3)
 
         # Vrcholy
         for v, label in zip(self.outer_tetra, self.outer_labels):
@@ -236,16 +236,16 @@ Z = S - 3*E
                 color='#4169E1', opacity=opacity * 0.2
             )
 
-            # Střední čtyřstěn - žluté průhledné
+            # Střední čtyřstěn - oranžové průhledné
             fig = PlotlyRenderer3D.add_faces(
                 fig, self.middle_tetra, self.middle_faces,
-                color='#FFD700', opacity=opacity * 0.5
+                color='orange', opacity=opacity * 0.5
             )
 
-            # Vnitřní čtyřstěn - zelené
+            # Vnitřní čtyřstěn - červené
             fig = PlotlyRenderer3D.add_faces(
                 fig, self.inner_tetra, self.inner_faces,
-                color='#00FF00', opacity=opacity
+                color='red', opacity=opacity
             )
 
         # Nakresli hrany
@@ -269,13 +269,13 @@ Z = S - 3*E
                 color='orange', width=edge_width
             )
 
-        # Vnitřní čtyřstěn - zelené hrany
+        # Vnitřní čtyřstěn - červené hrany
         inner_edges = [(0,1), (0,2), (0,3), (1,2), (1,3), (2,3)]
         for edge in inner_edges:
             i, j = edge
             fig = PlotlyRenderer3D.add_edge(
                 fig, self.inner_tetra[i], self.inner_tetra[j],
-                color='green', width=edge_width
+                color='red', width=edge_width
             )
 
         # Nakresli vrcholy

@@ -245,16 +245,16 @@ Tento diagram ukazuje **trojitou dualitu** - tři tělesa vnořená do sebe:
         if st.session_state.get('show_faces', False):
             opacity = st.session_state.get('face_opacity', 0.5)
 
-            # Vnější osmistěn - žlutá průhledná
+            # Vnější osmistěn - oranžová průhledná
             fig = PlotlyRenderer3D.add_faces(
                 fig, self.outer_octa_vertices, self.outer_octa_faces,
-                color='#FFD700', opacity=opacity * 0.4  # Velmi průhledná
+                color='orange', opacity=opacity * 0.4  # Velmi průhledná
             )
 
-            # Vnitřní osmistěn - azurová
+            # Vnitřní osmistěn - modrá
             fig = PlotlyRenderer3D.add_faces(
                 fig, self.inner_octa_vertices, self.inner_octa_faces,
-                color='#00CED1', opacity=opacity
+                color='blue', opacity=opacity
             )
 
         # Nakresli hrany vnějšího osmistěnu (oranžová)
@@ -297,7 +297,7 @@ Tento diagram ukazuje **trojitou dualitu** - tři tělesa vnořená do sebe:
 
         for v, label in zip(self.inner_octa_vertices, self.inner_octa_labels):
             fig = PlotlyRenderer3D.add_point(
-                fig, v, color='red', size=vertex_size, label=label
+                fig, v, color='blue', size=vertex_size, label=label
             )
 
         return fig
