@@ -69,9 +69,9 @@ To znamená, že potřebujeme přidat **ještě 12 vrcholů** k těmto 8.
         ax.set_title(self.metadata.title, fontsize=14, fontweight='bold')
 
         Renderer3D.draw_edges(ax, self.cube_vertices, self.cube_edges,
-                             color='blue', width=2)
+                             color='orange', width=2)
         labels = [str(i+1) for i in range(8)]
-        Renderer3D.draw_points(ax, self.cube_vertices, colors='blue',
+        Renderer3D.draw_points(ax, self.cube_vertices, colors='orange',
                               sizes=120, labels=labels)
 
     def render_plotly_diagram(self) -> go.Figure:
@@ -79,9 +79,9 @@ To znamená, že potřebujeme přidat **ještě 12 vrcholů** k těmto 8.
         fig = PlotlyRenderer3D.create_figure(axis_limits=(-2, 2))
         fig = PlotlyRenderer3D.add_title(fig, self.metadata.title)
         fig = PlotlyRenderer3D.add_edges(fig, self.cube_vertices, self.cube_edges,
-                                         color='blue', width=3)
+                                         color='orange', width=3)
         labels = [str(i+1) for i in range(8)]
-        fig = PlotlyRenderer3D.add_points(fig, self.cube_vertices, colors='blue',
+        fig = PlotlyRenderer3D.add_points(fig, self.cube_vertices, colors='orange',
                                           sizes=12, labels=labels)
         return fig
 

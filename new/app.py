@@ -80,6 +80,13 @@ def initialize_session_state():
     if 'face_color' not in st.session_state:
         st.session_state.face_color = '#00CED1'  # DarkTurquoise (výrazná azurová)
 
+    # Nastavení pro hrany a vrcholy
+    if 'edge_width' not in st.session_state:
+        st.session_state.edge_width = 3
+
+    if 'vertex_size' not in st.session_state:
+        st.session_state.vertex_size = 12
+
 
 def render_sidebar():
     """Vykreslí sidebar s navigací"""
@@ -131,6 +138,27 @@ def render_sidebar():
             step=0.05,
             help="0.0 = průhledné, 1.0 = neprůhledné"
         )
+
+    # Nastavení hran a vrcholů
+    st.sidebar.markdown("### ⚙️ Hrany a vrcholy")
+
+    st.session_state.edge_width = st.sidebar.slider(
+        "Tloušťka hran",
+        min_value=1,
+        max_value=8,
+        value=st.session_state.edge_width,
+        step=1,
+        help="Tloušťka čar pro hrany těles"
+    )
+
+    st.session_state.vertex_size = st.sidebar.slider(
+        "Velikost vrcholů",
+        min_value=5,
+        max_value=25,
+        value=st.session_state.vertex_size,
+        step=1,
+        help="Velikost bodů reprezentujících vrcholy"
+    )
 
     # Informace na konci sidebaru
     st.sidebar.markdown("---")

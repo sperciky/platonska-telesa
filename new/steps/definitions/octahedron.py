@@ -5,6 +5,7 @@ Octahedron construction steps
 import numpy as np
 from matplotlib.figure import Figure
 import plotly.graph_objects as go
+import streamlit as st
 from steps.base_step import Step, StepMetadata
 from views.renderer import Renderer3D
 from views.plotly_renderer import PlotlyRenderer3D
@@ -116,10 +117,10 @@ class OctaStep2_Complete(Step):
             [ 0, -1,  0], [ 0,  0,  1], [ 0,  0, -1]
         ])
 
-        # Stěny osmistěnu (trojúhelníky)
+        # Stěny osmistěnu (8 trojúhelníků)
         self.octa_faces = [
-            (0, 2, 4), (0, 4, 3), (0, 3, 5), (0, 5, 2),
-            (1, 4, 2), (1, 3, 4), (1, 5, 3), (1, 2, 5)
+            [0, 2, 4], [0, 4, 3], [0, 3, 5], [0, 5, 2],
+            [1, 4, 2], [1, 3, 4], [1, 5, 3], [1, 2, 5]
         ]
 
         # Hrany (vypočítáme ze stěn)
@@ -214,18 +215,29 @@ Osmistěn je **duální** k hranu! To znamená:
         fig = PlotlyRenderer3D.create_figure(axis_limits=(-2, 2))
         fig = PlotlyRenderer3D.add_title(fig, self.metadata.title)
 
+        # Nakresli stěny, pokud je to zapnuté
+        if st.session_state.get('show_faces', False):
+            opacity = st.session_state.get('face_opacity', 0.5)
+            color = st.session_state.get('face_color', '#00CED1')
+            fig = PlotlyRenderer3D.add_faces(
+                fig, self.octa_vertices, self.octa_faces,
+                color=color, opacity=opacity
+            )
+
         # Nakresli hrany
+        edge_width = st.session_state.get('edge_width', 4)
         fig = PlotlyRenderer3D.add_edges(
             fig, self.octa_vertices, self.octa_edges,
-            color='blue', width=4
+            color='blue', width=edge_width
         )
 
         # Nakresli vrcholy
+        vertex_size = st.session_state.get('vertex_size', 15)
         labels = [str(i+1) for i in range(6)]
         fig = PlotlyRenderer3D.add_points(
             fig, self.octa_vertices,
             colors='red',
-            sizes=15,
+            sizes=vertex_size,
             labels=labels
         )
 
