@@ -80,8 +80,12 @@ def render_sidebar():
     """)
 
 
-def render_step_navigation():
-    """Vykreslí navigační tlačítka mezi kroky"""
+def render_step_navigation(position="top"):
+    """Vykreslí navigační tlačítka mezi kroky
+
+    Args:
+        position: "top" nebo "bottom" - pro unikátní klíče tlačítek
+    """
     registry = get_registry()
     current = st.session_state.current_step
     total = registry.get_step_count()
@@ -90,7 +94,9 @@ def render_step_navigation():
 
     with col1:
         if current > 0:
-            if st.button("⬅️ Předchozí", use_container_width=True):
+            if st.button("⬅️ Předchozí",
+                        key=f"prev_{position}",
+                        use_container_width=True):
                 st.session_state.current_step -= 1
                 st.rerun()
 
@@ -102,7 +108,9 @@ def render_step_navigation():
 
     with col3:
         if current < total - 1:
-            if st.button("Další ➡️", use_container_width=True):
+            if st.button("Další ➡️",
+                        key=f"next_{position}",
+                        use_container_width=True):
                 st.session_state.current_step += 1
                 st.rerun()
 
@@ -169,8 +177,8 @@ def main():
     st.title("📐 Platónská tělesa - Interaktivní tutoriál")
     st.markdown("---")
 
-    # Navigační tlačítka
-    render_step_navigation()
+    # Navigační tlačítka nahoře
+    render_step_navigation(position="top")
 
     st.markdown("---")
 
@@ -179,7 +187,7 @@ def main():
 
     # Navigační tlačítka dole (pro pohodlí)
     st.markdown("---")
-    render_step_navigation()
+    render_step_navigation(position="bottom")
 
 
 if __name__ == "__main__":
