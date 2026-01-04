@@ -34,6 +34,7 @@ from steps.definitions.dodecahedron import (
 from steps.definitions.duality_cube_octahedron import DualityCubeOctahedron
 from steps.definitions.duality_nested_octahedra import DualityNestedOctahedra
 from steps.definitions.duality_icosahedron_dodecahedron import DualityIcosahedronDodecahedron
+from steps.definitions.duality_tetrahedron_self import DualityTetrahedronSelf
 from steps.definitions.bonus import BonusStep_TriangleCenter
 
 
@@ -68,6 +69,7 @@ def register_all_steps():
     registry.register(DualityCubeOctahedron())
     registry.register(DualityNestedOctahedra())
     registry.register(DualityIcosahedronDodecahedron())
+    registry.register(DualityTetrahedronSelf())
 
     # Bonus
     registry.register(BonusStep_TriangleCenter())
