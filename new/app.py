@@ -17,6 +17,21 @@ from steps.definitions.tetrahedron import (
     TetraStep2_Selection,
     TetraStep3_Complete
 )
+from steps.definitions.octahedron import (
+    OctaStep1_Axes,
+    OctaStep2_Complete
+)
+from steps.definitions.icosahedron import (
+    IcosaStep1_Rectangle,
+    IcosaStep2_ThreeRectangles,
+    IcosaStep3_Complete
+)
+from steps.definitions.dodecahedron import (
+    DodecaStep1_Cube,
+    DodecaStep2_GoldenRectangles,
+    DodecaStep3_Complete
+)
+from steps.definitions.bonus import BonusStep_TriangleCenter
 
 
 def register_all_steps():
@@ -24,16 +39,30 @@ def register_all_steps():
     registry = get_registry()
     registry.clear()  # Vyčisti registry (důležité pro reload)
 
-    # Zaregistruj všechny kroky
+    # Úvod
     registry.register(IntroStep())
+
+    # Čtyřstěn (Tetrahedron)
     registry.register(TetraStep1_Cube())
     registry.register(TetraStep2_Selection())
     registry.register(TetraStep3_Complete())
 
-    # TODO: Přidej další kroky zde:
-    # registry.register(OctaStep1())
-    # registry.register(OctaStep2())
-    # ...
+    # Osmistěn (Octahedron)
+    registry.register(OctaStep1_Axes())
+    registry.register(OctaStep2_Complete())
+
+    # Dvacetistěn (Icosahedron)
+    registry.register(IcosaStep1_Rectangle())
+    registry.register(IcosaStep2_ThreeRectangles())
+    registry.register(IcosaStep3_Complete())
+
+    # Dvanáctistěn (Dodecahedron)
+    registry.register(DodecaStep1_Cube())
+    registry.register(DodecaStep2_GoldenRectangles())
+    registry.register(DodecaStep3_Complete())
+
+    # Bonus
+    registry.register(BonusStep_TriangleCenter())
 
 
 def initialize_session_state():
