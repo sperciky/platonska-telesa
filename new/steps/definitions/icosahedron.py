@@ -239,7 +239,19 @@ Vytvoříme **3 obdélníky** se zlatým řezem, **kolmé na sebe**:
         colors_rect = ['red']*4 + ['green']*4 + ['blue']*4
         rect_colors = ['red', 'green', 'blue']
 
-        # Nakresli obdélníky
+        # Nakresli stěny obdélníků, pokud je to zapnuté
+        if st.session_state.get('show_faces', False):
+            opacity = st.session_state.get('face_opacity', 0.5)
+
+            for rect_idx, color in zip(self.rectangles, rect_colors):
+                # Čtyřúhelník - použij indexy přímo
+                face = [rect_idx[0], rect_idx[1], rect_idx[2], rect_idx[3]]
+                fig = PlotlyRenderer3D.add_face(
+                    fig, self.icosa_vertices, face,
+                    color=color, opacity=opacity
+                )
+
+        # Nakresli hrany obdélníků
         for rect_idx, color in zip(self.rectangles, rect_colors):
             edges = [
                 (rect_idx[0], rect_idx[1]),
