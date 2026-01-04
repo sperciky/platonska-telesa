@@ -4,8 +4,10 @@ Introduction steps
 """
 import numpy as np
 from matplotlib.figure import Figure
+import plotly.graph_objects as go
 from steps.base_step import Step, StepMetadata
 from config.settings import APP_INFO
+from views.plotly_renderer import PlotlyRenderer3D
 
 
 class IntroStep(Step):
@@ -56,9 +58,17 @@ Existuje pouze **5 pravidelných mnohostěnů**! Toto tvrzení dokázali už sta
 """
 
     def render_diagram(self, fig: Figure, ax) -> None:
-        """Úvodní diagram - prázdné 3D osy"""
+        """Úvodní diagram - prázdné 3D osy (matplotlib - legacy)"""
         self.setup_axes(ax)
         ax.set_title(self.metadata.title, fontsize=16, fontweight='bold', pad=20)
 
         # Zobraz jen osy bez dat
         ax.grid(True, alpha=0.3)
+
+    def render_plotly_diagram(self) -> go.Figure:
+        """Úvodní diagram - prázdné 3D osy (Plotly - interaktivní)"""
+        fig = PlotlyRenderer3D.create_figure(axis_limits=(-2, 2))
+        fig = PlotlyRenderer3D.add_title(fig, self.metadata.title)
+
+        # Prázdný diagram - zobrazí jen osy
+        return fig

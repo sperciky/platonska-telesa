@@ -3,11 +3,10 @@ Hlavní Streamlit aplikace pro Platónská tělesa
 Main Streamlit application for Platonic Solids tutorial
 """
 import streamlit as st
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+import plotly.graph_objects as go
 
 # Konfigurace musí být první Streamlit příkaz
-from config.settings import PAGE_CONFIG, LAYOUT, FIGURE
+from config.settings import PAGE_CONFIG, LAYOUT
 st.set_page_config(**PAGE_CONFIG)
 
 # Import kroků
@@ -115,34 +114,18 @@ def render_step_navigation(position="top"):
                 st.rerun()
 
 
-def create_3d_figure(step, elevation=None, azimuth=None):
+def create_plotly_figure(step):
     """
-    Vytvoří matplotlib 3D figure pro daný krok
+    Vytvoří interaktivní Plotly 3D figure pro daný krok
 
     Args:
         step: Instance kroku
-        elevation: Úhel elevace (nahoru/dolů) v stupních
-        azimuth: Úhel azimutu (otočení) v stupních
 
     Returns:
-        matplotlib Figure
+        Plotly Figure s interaktivní 3D vizualizací
     """
-    fig = plt.figure(figsize=FIGURE['figsize'], dpi=FIGURE['dpi'])
-    fig.patch.set_facecolor(FIGURE['facecolor'])
-
-    ax = fig.add_subplot(111, projection='3d')
-
-    # Nech krok vykreslit diagram
-    step.render_diagram(fig, ax)
-
-    # Nastav úhel pohledu, pokud je specifikován
-    if elevation is not None or azimuth is not None:
-        current_elev, current_azim = ax.elev, ax.azim
-        ax.view_init(
-            elev=elevation if elevation is not None else current_elev,
-            azim=azimuth if azimuth is not None else current_azim
-        )
-
+    # Nech krok vykreslit Plotly diagram
+    fig = step.render_plotly_diagram()
     return fig
 
 
@@ -163,34 +146,12 @@ def render_main_content():
 
     # Levý sloupec - 3D diagram
     with col_diagram:
-        st.markdown("### 🔷 3D Diagram")
+        st.markdown("### 🔷 Interaktivní 3D Diagram")
+        st.info("💡 **Tip:** Použij myš k otáčení diagramu! Scroll kolečkem přiblíží/oddálí.")
 
-        # Ovládání rotace
-        with st.expander("🔄 Otáčení diagramu", expanded=False):
-            col_elev, col_azim = st.columns(2)
-            with col_elev:
-                elevation = st.slider(
-                    "Elevace (nahoru/dolů)",
-                    min_value=-90,
-                    max_value=90,
-                    value=20,
-                    step=5,
-                    key=f"elev_{st.session_state.current_step}"
-                )
-            with col_azim:
-                azimuth = st.slider(
-                    "Azimut (otočení)",
-                    min_value=0,
-                    max_value=360,
-                    value=45,
-                    step=5,
-                    key=f"azim_{st.session_state.current_step}"
-                )
-
-        # Vytvoř figure s nastaveným úhlem pohledu
-        fig = create_3d_figure(step, elevation=elevation, azimuth=azimuth)
-        st.pyplot(fig, use_container_width=True)
-        plt.close(fig)  # Uvolni paměť
+        # Vytvoř interaktivní Plotly figure
+        fig = create_plotly_figure(step)
+        st.plotly_chart(fig, use_container_width=True)
 
     # Pravý sloupec - popis
     with col_description:

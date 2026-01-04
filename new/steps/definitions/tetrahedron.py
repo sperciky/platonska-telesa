@@ -4,8 +4,10 @@ Tetrahedron construction steps
 """
 import numpy as np
 from matplotlib.figure import Figure
+import plotly.graph_objects as go
 from steps.base_step import Step, StepMetadata
 from views.renderer import Renderer3D
+from views.plotly_renderer import PlotlyRenderer3D
 from config.settings import PHI
 
 
@@ -87,7 +89,7 @@ Krychle je skvělý výchozí bod, protože:
 """
 
     def render_diagram(self, fig: Figure, ax) -> None:
-        """Vykreslení krychle"""
+        """Vykreslení krychle (matplotlib - legacy)"""
         self.setup_axes(ax)
         ax.set_title(self.metadata.title, fontsize=14, fontweight='bold')
 
@@ -105,6 +107,28 @@ Krychle je skvělý výchozí bod, protože:
             sizes=80,
             labels=labels
         )
+
+    def render_plotly_diagram(self) -> go.Figure:
+        """Vykreslení krychle (Plotly - interaktivní)"""
+        fig = PlotlyRenderer3D.create_figure(axis_limits=(-2, 2))
+        fig = PlotlyRenderer3D.add_title(fig, self.metadata.title)
+
+        # Nakresli hrany krychle
+        fig = PlotlyRenderer3D.add_edges(
+            fig, self.cube_vertices, self.cube_edges,
+            color='gray', width=2, dash='dash'
+        )
+
+        # Nakresli vrcholy
+        labels = [str(i) for i in range(8)]
+        fig = PlotlyRenderer3D.add_points(
+            fig, self.cube_vertices,
+            colors='lightgray',
+            sizes=8,
+            labels=labels
+        )
+
+        return fig
 
 
 class TetraStep2_Selection(Step):
@@ -171,7 +195,7 @@ Zkus se podívat na diagram vlevo a ověř si, že:
 """
 
     def render_diagram(self, fig: Figure, ax) -> None:
-        """Vykreslení krychle s označenými vrcholy"""
+        """Vykreslení krychle s označenými vrcholy (matplotlib - legacy)"""
         self.setup_axes(ax)
         ax.set_title(self.metadata.title, fontsize=14, fontweight='bold')
 
@@ -187,6 +211,26 @@ Zkus se podívat na diagram vlevo a ověř si, že:
                 Renderer3D.draw_point(ax, v, color='red', size=150, label=str(i))
             else:
                 Renderer3D.draw_point(ax, v, color='lightgray', size=60, label=str(i))
+
+    def render_plotly_diagram(self) -> go.Figure:
+        """Vykreslení krychle s označenými vrcholy (Plotly - interaktivní)"""
+        fig = PlotlyRenderer3D.create_figure(axis_limits=(-2, 2))
+        fig = PlotlyRenderer3D.add_title(fig, self.metadata.title)
+
+        # Nakresli hrany krychle
+        fig = PlotlyRenderer3D.add_edges(
+            fig, self.cube_vertices, self.cube_edges,
+            color='lightgray', width=2, dash='dash'
+        )
+
+        # Nakresli vrcholy - vybrané červeně, ostatní šedě
+        for i, v in enumerate(self.cube_vertices):
+            if i in self.tetra_indices:
+                fig = PlotlyRenderer3D.add_point(fig, v, color='red', size=15, label=str(i))
+            else:
+                fig = PlotlyRenderer3D.add_point(fig, v, color='lightgray', size=6, label=str(i))
+
+        return fig
 
 
 class TetraStep3_Complete(Step):
@@ -268,7 +312,7 @@ Můžeš si ověřit, že vzdálenost mezi **jakýmikoliv dvěma** vrcholy je v�
 """
 
     def render_diagram(self, fig: Figure, ax) -> None:
-        """Vykreslení hotového čtyřstěnu"""
+        """Vykreslení hotového čtyřstěnu (matplotlib - legacy)"""
         self.setup_axes(ax)
         ax.set_title(self.metadata.title, fontsize=14, fontweight='bold')
 
@@ -286,3 +330,25 @@ Můžeš si ověřit, že vzdálenost mezi **jakýmikoliv dvěma** vrcholy je v�
             sizes=150,
             labels=labels
         )
+
+    def render_plotly_diagram(self) -> go.Figure:
+        """Vykreslení hotového čtyřstěnu (Plotly - interaktivní)"""
+        fig = PlotlyRenderer3D.create_figure(axis_limits=(-2, 2))
+        fig = PlotlyRenderer3D.add_title(fig, self.metadata.title)
+
+        # Nakresli hrany čtyřstěnu
+        fig = PlotlyRenderer3D.add_edges(
+            fig, self.tetra_vertices, self.tetra_edges,
+            color='blue', width=4
+        )
+
+        # Nakresli vrcholy
+        labels = ['A', 'B', 'C', 'D']
+        fig = PlotlyRenderer3D.add_points(
+            fig, self.tetra_vertices,
+            colors='red',
+            sizes=15,
+            labels=labels
+        )
+
+        return fig
