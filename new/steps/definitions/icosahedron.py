@@ -114,6 +114,15 @@ Díky těmto vlastnostem můžeme zkonstruovat dokonale pravidelný dvacetistěn
         fig = PlotlyRenderer3D.create_figure(axis_limits=(-2, 2))
         fig = PlotlyRenderer3D.add_title(fig, self.metadata.title)
 
+        # Nakresli stěnu obdélníku, pokud je to zapnuté
+        if st.session_state.get('show_faces', False):
+            # Obdélník: vrcholy 0, 1, 3, 2
+            face = [0, 1, 3, 2]
+            fig = PlotlyRenderer3D.add_face(
+                fig, self.rect1, face,
+                color='red', opacity=0.3
+            )
+
         # Nakresli hrany obdélníku
         fig = PlotlyRenderer3D.add_edges(
             fig, self.rect1, self.rect_edges,
