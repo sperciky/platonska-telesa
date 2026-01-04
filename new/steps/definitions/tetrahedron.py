@@ -347,10 +347,11 @@ Můžeš si ověřit, že vzdálenost mezi **jakýmikoliv dvěma** vrcholy je v�
 
         # Nakresli stěny, pokud je to zapnuté
         if st.session_state.get('show_faces', False):
-            opacity = st.session_state.get('face_opacity', 0.3)
+            opacity = st.session_state.get('face_opacity', 0.5)
+            color = st.session_state.get('face_color', '#00CED1')
             fig = PlotlyRenderer3D.add_faces(
                 fig, self.tetra_vertices, self.tetra_faces,
-                color='cyan', opacity=opacity
+                color=color, opacity=opacity
             )
 
         # Nakresli hrany čtyřstěnu

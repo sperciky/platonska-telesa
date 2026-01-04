@@ -9,9 +9,15 @@ Uživatel může zapnout/vypnout stěny a řídit jejich průhlednost pomocí ov
 
 V `st.session_state` jsou uloženy:
 - `show_faces` (bool): Zapne/vypne vykreslování stěn
+- `face_color` (string): Barva stěn (hex formát, např. '#00CED1')
 - `face_opacity` (float 0.0-1.0): Průhlednost stěn (0.0 = průhledné, 1.0 = neprůhledné)
 
 Tyto hodnoty přetrvávají mezi kroky.
+
+**Výchozí hodnoty:**
+- `show_faces = False`
+- `face_color = '#00CED1'` (DarkTurquoise - výrazná azurová)
+- `face_opacity = 0.5` (50% průhlednost)
 
 ## Jak přidat stěny do kroku / How to Add Faces to a Step
 
@@ -49,12 +55,13 @@ def render_plotly_diagram(self) -> go.Figure:
 
     # Zkontroluj, zda jsou stěny zapnuté
     if st.session_state.get('show_faces', False):
-        opacity = st.session_state.get('face_opacity', 0.3)
+        opacity = st.session_state.get('face_opacity', 0.5)
+        color = st.session_state.get('face_color', '#00CED1')
 
-        # Vykresli stěny
+        # Vykresli stěny s barvou zvolenou uživatelem
         fig = PlotlyRenderer3D.add_faces(
             fig, self.vertices, self.faces,
-            color='cyan',  # Barva stěn
+            color=color,
             opacity=opacity
         )
 
@@ -65,31 +72,59 @@ def render_plotly_diagram(self) -> go.Figure:
 
 ## Podpora pro více objektů / Multiple Objects Support
 
-Pro duální tělesa nebo více objektů v jednom kroku:
+Pro duální tělesa nebo více objektů v jednom kroku můžeš použít:
+
+### Varianta A: Respektovat barvu uživatele pro oba objekty
 
 ```python
 def render_plotly_diagram(self) -> go.Figure:
     fig = PlotlyRenderer3D.create_figure(axis_limits=(-2, 2))
 
     if st.session_state.get('show_faces', False):
-        opacity = st.session_state.get('face_opacity', 0.3)
+        opacity = st.session_state.get('face_opacity', 0.5)
+        color = st.session_state.get('face_color', '#00CED1')
 
-        # Objekt 1 - Čtyřstěn (azurová barva)
+        # Oba objekty mají stejnou barvu zvolenou uživatelem
         fig = PlotlyRenderer3D.add_faces(
             fig, self.tetra_vertices, self.tetra_faces,
-            color='cyan', opacity=opacity
+            color=color, opacity=opacity
         )
-
-        # Objekt 2 - Osmistěn (růžová barva)
         fig = PlotlyRenderer3D.add_faces(
             fig, self.octa_vertices, self.octa_faces,
-            color='pink', opacity=opacity
+            color=color, opacity=opacity
+        )
+
+    return fig
+```
+
+### Varianta B: Fixní kontrastní barvy pro duální tělesa
+
+```python
+def render_plotly_diagram(self) -> go.Figure:
+    fig = PlotlyRenderer3D.create_figure(axis_limits=(-2, 2))
+
+    if st.session_state.get('show_faces', False):
+        opacity = st.session_state.get('face_opacity', 0.5)
+
+        # Objekt 1 - Čtyřstěn (azurová barva - fixní)
+        fig = PlotlyRenderer3D.add_faces(
+            fig, self.tetra_vertices, self.tetra_faces,
+            color='#00CED1', opacity=opacity
+        )
+
+        # Objekt 2 - Osmistěn (růžová barva - fixní)
+        fig = PlotlyRenderer3D.add_faces(
+            fig, self.octa_vertices, self.octa_faces,
+            color='#FF69B4', opacity=opacity
         )
 
     # ... hrany a vrcholy pro oba objekty
 
     return fig
 ```
+
+**Doporučení:** Pro kroky s dualismem použij Variantu B s fixními kontrastními barvami,
+aby bylo jasně vidět rozdíl mezi objekty.
 
 ## Podporované typy stěn / Supported Face Types
 
