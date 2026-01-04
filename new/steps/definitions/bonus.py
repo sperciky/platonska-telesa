@@ -33,7 +33,7 @@ class BonusStep_TriangleCenter(Step):
 
     def get_metadata(self) -> StepMetadata:
         return StepMetadata(
-            number=12,
+            number=15,
             category='Bonus',
             title='Bonus: Střed trojúhelníku (těžiště)',
             short_name='Střed trojúhelníku'

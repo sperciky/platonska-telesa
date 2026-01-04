@@ -31,6 +31,9 @@ from steps.definitions.dodecahedron import (
     DodecaStep2_GoldenRectangles,
     DodecaStep3_Complete
 )
+from steps.definitions.duality_cube_octahedron import DualityCubeOctahedron
+from steps.definitions.duality_nested_octahedra import DualityNestedOctahedra
+from steps.definitions.duality_icosahedron_dodecahedron import DualityIcosahedronDodecahedron
 from steps.definitions.bonus import BonusStep_TriangleCenter
 
 
@@ -60,6 +63,11 @@ def register_all_steps():
     registry.register(DodecaStep1_Cube())
     registry.register(DodecaStep2_GoldenRectangles())
     registry.register(DodecaStep3_Complete())
+
+    # Dualita (Duality)
+    registry.register(DualityCubeOctahedron())
+    registry.register(DualityNestedOctahedra())
+    registry.register(DualityIcosahedronDodecahedron())
 
     # Bonus
     registry.register(BonusStep_TriangleCenter())
