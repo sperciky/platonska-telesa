@@ -5,6 +5,7 @@ Dodecahedron construction steps
 import numpy as np
 from matplotlib.figure import Figure
 import plotly.graph_objects as go
+import streamlit as st
 from steps.base_step import Step, StepMetadata
 from views.renderer import Renderer3D
 from views.plotly_renderer import PlotlyRenderer3D
@@ -317,11 +318,18 @@ d = 2/φ ≈ {2/PHI:.3f}
         """Vykreslení hotového dvanáctistěnu (Plotly - interaktivní)"""
         fig = PlotlyRenderer3D.create_figure(axis_limits=(-2, 2))
         fig = PlotlyRenderer3D.add_title(fig, self.metadata.title)
-        
+
+        # TODO: Add pentagonal faces when provided by user
+        # Dodecahedron has 12 pentagonal faces - complex to define correctly
+
+        # Nakresli hrany
+        edge_width = st.session_state.get('edge_width', 2)
         fig = PlotlyRenderer3D.add_edges(fig, self.dodeca_vertices, self.sample_edges,
-                                         color='green', width=2)
-        
+                                         color='green', width=edge_width)
+
+        # Nakresli vrcholy
+        vertex_size = st.session_state.get('vertex_size', 10)
         for i, v in enumerate(self.dodeca_vertices):
             color = 'blue' if i < 8 else 'red'
-            fig = PlotlyRenderer3D.add_point(fig, v, color=color, size=10, show_label=False)
+            fig = PlotlyRenderer3D.add_point(fig, v, color=color, size=vertex_size, show_label=False)
         return fig

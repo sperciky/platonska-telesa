@@ -5,6 +5,7 @@ Icosahedron construction steps
 import numpy as np
 from matplotlib.figure import Figure
 import plotly.graph_objects as go
+import streamlit as st
 from steps.base_step import Step, StepMetadata
 from views.renderer import Renderer3D
 from views.plotly_renderer import PlotlyRenderer3D
@@ -359,18 +360,29 @@ Toto není náhoda - je to důsledek speciálních vlastností zlatého řezu:
         fig = PlotlyRenderer3D.create_figure(axis_limits=(-2, 2))
         fig = PlotlyRenderer3D.add_title(fig, self.metadata.title)
 
+        # Nakresli stěny, pokud je to zapnuté
+        if st.session_state.get('show_faces', False):
+            opacity = st.session_state.get('face_opacity', 0.5)
+            color = st.session_state.get('face_color', '#00CED1')
+            fig = PlotlyRenderer3D.add_faces(
+                fig, self.icosa_vertices, self.icosa_faces,
+                color=color, opacity=opacity
+            )
+
         # Nakresli hrany
+        edge_width = st.session_state.get('edge_width', 3)
         fig = PlotlyRenderer3D.add_edges(
             fig, self.icosa_vertices, self.icosa_edges,
-            color='blue', width=3
+            color='blue', width=edge_width
         )
 
         # Nakresli vrcholy
+        vertex_size = st.session_state.get('vertex_size', 12)
         labels = [chr(65+i) for i in range(12)]  # A-L
         fig = PlotlyRenderer3D.add_points(
             fig, self.icosa_vertices,
             colors='red',
-            sizes=12,
+            sizes=vertex_size,
             labels=labels
         )
 
