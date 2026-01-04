@@ -5,6 +5,7 @@ Bonus step - triangle centroid
 import numpy as np
 from matplotlib.figure import Figure
 import plotly.graph_objects as go
+import streamlit as st
 from steps.base_step import Step, StepMetadata
 from views.renderer import Renderer3D
 from views.plotly_renderer import PlotlyRenderer3D
@@ -27,9 +28,12 @@ class BonusStep_TriangleCenter(Step):
         self.B = icosa_vertices[8]
         self.C = icosa_vertices[4]
         self.center = (self.A + self.B + self.C) / 3
-        
+
         self.triangle_edges = [(0, 1), (1, 2), (2, 0)]
         self.triangle_vertices = np.array([self.A, self.B, self.C])
+
+        # Stěna trojúhelníku (1 trojúhelník)
+        self.triangle_face = [[0, 1, 2]]
 
     def get_metadata(self) -> StepMetadata:
         return StepMetadata(
@@ -120,21 +124,33 @@ Těžiště se používá:
         fig = PlotlyRenderer3D.create_figure(axis_limits=(-2, 2))
         fig = PlotlyRenderer3D.add_title(fig, self.metadata.title)
 
-        # Nakresli trojúhelník
-        fig = PlotlyRenderer3D.add_edges(fig, self.triangle_vertices, self.triangle_edges,
-                                         color='blue', width=4)
+        # Nakresli stěnu trojúhelníku, pokud je to zapnuté
+        if st.session_state.get('show_faces', False):
+            opacity = st.session_state.get('face_opacity', 0.5)
+            color = st.session_state.get('face_color', '#00CED1')
+            fig = PlotlyRenderer3D.add_faces(
+                fig, self.triangle_vertices, self.triangle_face,
+                color=color, opacity=opacity
+            )
 
-        # Nakresli vrcholy
+        # Nakresli hrany trojúhelníku
+        edge_width = st.session_state.get('edge_width', 4)
+        fig = PlotlyRenderer3D.add_edges(fig, self.triangle_vertices, self.triangle_edges,
+                                         color='blue', width=edge_width)
+
+        # Nakresli vrcholy trojúhelníku
+        vertex_size = st.session_state.get('vertex_size', 15)
         labels = ['A', 'B', 'C']
         fig = PlotlyRenderer3D.add_points(fig, self.triangle_vertices, colors='red',
-                                          sizes=15, labels=labels)
+                                          sizes=vertex_size, labels=labels)
 
-        # Nakresli těžiště
-        fig = PlotlyRenderer3D.add_point(fig, self.center, color='green', size=20, label='T')
+        # Nakresli těžiště (o něco větší než vrcholy)
+        fig = PlotlyRenderer3D.add_point(fig, self.center, color='green',
+                                        size=vertex_size * 1.3, label='T')
 
-        # Nakresli čáry z vrcholů do těžiště
+        # Nakresli čáry z vrcholů do těžiště (tenčí než hrany)
         for v in self.triangle_vertices:
-            fig = PlotlyRenderer3D.add_edge(fig, v, self.center, color='green', 
-                                            width=2, dash='dash')
+            fig = PlotlyRenderer3D.add_edge(fig, v, self.center, color='green',
+                                            width=edge_width * 0.5, dash='dash')
 
         return fig
