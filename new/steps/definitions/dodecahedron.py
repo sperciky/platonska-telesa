@@ -93,19 +93,32 @@ class DodecaStep2_GoldenRectangles(Step):
         super().__init__()
         # Vytvoř všech 20 vrcholů dvanáctistěnu
         dodeca_vertices = []
-        # 8 vrcholů krychle
+        # 8 vrcholů krychle (indices 0-7)
         for i in [-1, 1]:
             for j in [-1, 1]:
                 for k in [-1, 1]:
                     dodeca_vertices.append([i, j, k])
         # 12 vrcholů ze zlatých obdélníků
         for coords in [
-            [0, 1/PHI, PHI], [0, 1/PHI, -PHI], [0, -1/PHI, PHI], [0, -1/PHI, -PHI],
-            [1/PHI, PHI, 0], [1/PHI, -PHI, 0], [-1/PHI, PHI, 0], [-1/PHI, -PHI, 0],
-            [PHI, 0, 1/PHI], [PHI, 0, -1/PHI], [-PHI, 0, 1/PHI], [-PHI, 0, -1/PHI]
+            [0, 1/PHI, PHI], [0, 1/PHI, -PHI], [0, -1/PHI, PHI], [0, -1/PHI, -PHI],  # 8-11: YZ (red)
+            [1/PHI, PHI, 0], [1/PHI, -PHI, 0], [-1/PHI, PHI, 0], [-1/PHI, -PHI, 0],  # 12-15: XY (green)
+            [PHI, 0, 1/PHI], [PHI, 0, -1/PHI], [-PHI, 0, 1/PHI], [-PHI, 0, -1/PHI]  # 16-19: ZX (blue)
         ]:
             dodeca_vertices.append(coords)
         self.dodeca_vertices = np.array(dodeca_vertices)
+
+        # Hrany krychle (indices 0-7)
+        self.cube_edges = [
+            (0, 1), (0, 2), (0, 4), (1, 3), (1, 5), (2, 3),
+            (2, 6), (3, 7), (4, 5), (4, 6), (5, 7), (6, 7)
+        ]
+
+        # Tři zlaté obdélníky
+        self.rectangles = [
+            (8, 9, 11, 10),    # YZ plane (červený)
+            (12, 13, 15, 14),  # XY plane (zelený)
+            (16, 17, 19, 18)   # ZX plane (modrý)
+        ]
 
     def get_metadata(self) -> StepMetadata:
         return StepMetadata(
@@ -125,24 +138,29 @@ Podobně jako u dvacetistěnu, použijeme **zlatý řez φ = {PHI:.3f}**
 
 ---
 
-### Tři skupiny obdélníků:
+### Tři skupiny zlatých obdélníků:
 
-🔴 **Rovina YZ (x=0):** 4 vrcholy
+🔴 **ČERVENÝ obdélník (rovina YZ, x=0):** 4 vrcholy
 - (0, ±1/φ, ±φ)
 
-🟢 **Rovina XZ (y=0):** 4 vrcholy
+🟢 **ZELENÝ obdélník (rovina XY, z=0):** 4 vrcholy
 - (±1/φ, ±φ, 0)
 
-🔵 **Rovina XY (z=0):** 4 vrcholy
+🔵 **MODRÝ obdélník (rovina ZX, y=0):** 4 vrcholy
 - (±φ, 0, ±1/φ)
+
+🟠 **ORANŽOVÁ krychle:** 8 vrcholů
+- (±1, ±1, ±1)
 
 ---
 
 ### Celkem:
 
-- **Modrých** vrcholů (krychle): 8
-- **Červených** vrcholů (obdélníky): 12
-- **CELKEM:** 8 + 12 = **20 vrcholů** ✓
+- **Oranžových** vrcholů (krychle): 8
+- **Červených** vrcholů: 4
+- **Zelených** vrcholů: 4
+- **Modrých** vrcholů: 4
+- **CELKEM:** 8 + 4 + 4 + 4 = **20 vrcholů** ✓
 
 ---
 
@@ -153,21 +171,67 @@ Podobně jako u dvacetistěnu, použijeme **zlatý řez φ = {PHI:.3f}**
         """Vykreslení všech vrcholů (matplotlib - legacy)"""
         self.setup_axes(ax)
         ax.set_title(self.metadata.title, fontsize=14, fontweight='bold')
-        
-        for i, v in enumerate(self.dodeca_vertices):
-            color = 'blue' if i < 8 else 'red'
-            size = 100 if i < 8 else 120
-            Renderer3D.draw_point(ax, v, color=color, size=size)
+
+        # Nakresli hrany krychle (oranžová)
+        Renderer3D.draw_edges(
+            ax, self.dodeca_vertices, self.cube_edges,
+            color='orange', width=2
+        )
+
+        # Nakresli obdélníky
+        rect_colors = ['red', 'green', 'blue']
+        for rect_idx, color in zip(self.rectangles, rect_colors):
+            edges = [
+                (rect_idx[0], rect_idx[1]),
+                (rect_idx[1], rect_idx[2]),
+                (rect_idx[2], rect_idx[3]),
+                (rect_idx[3], rect_idx[0])
+            ]
+            for edge in edges:
+                Renderer3D.draw_edge(
+                    ax,
+                    self.dodeca_vertices[edge[0]],
+                    self.dodeca_vertices[edge[1]],
+                    color=color, width=2
+                )
+
+        # Nakresli vrcholy
+        colors_vertices = ['orange']*8 + ['red']*4 + ['green']*4 + ['blue']*4
+        for v, color in zip(self.dodeca_vertices, colors_vertices):
+            Renderer3D.draw_point(ax, v, color=color, size=100)
 
     def render_plotly_diagram(self) -> go.Figure:
         """Vykreslení všech vrcholů (Plotly - interaktivní)"""
         fig = PlotlyRenderer3D.create_figure(axis_limits=(-2, 2))
         fig = PlotlyRenderer3D.add_title(fig, self.metadata.title)
-        
-        for i, v in enumerate(self.dodeca_vertices):
-            color = 'blue' if i < 8 else 'red'
-            size = 10 if i < 8 else 12
-            fig = PlotlyRenderer3D.add_point(fig, v, color=color, size=size, show_label=False)
+
+        # Nakresli hrany krychle (oranžová)
+        fig = PlotlyRenderer3D.add_edges(
+            fig, self.dodeca_vertices, self.cube_edges,
+            color='orange', width=3
+        )
+
+        # Nakresli obdélníky
+        rect_colors = ['red', 'green', 'blue']
+        for rect_idx, color in zip(self.rectangles, rect_colors):
+            edges = [
+                (rect_idx[0], rect_idx[1]),
+                (rect_idx[1], rect_idx[2]),
+                (rect_idx[2], rect_idx[3]),
+                (rect_idx[3], rect_idx[0])
+            ]
+            for edge in edges:
+                fig = PlotlyRenderer3D.add_edge(
+                    fig,
+                    self.dodeca_vertices[edge[0]],
+                    self.dodeca_vertices[edge[1]],
+                    color=color, width=3
+                )
+
+        # Nakresli vrcholy
+        colors_vertices = ['orange']*8 + ['red']*4 + ['green']*4 + ['blue']*4
+        for v, color in zip(self.dodeca_vertices, colors_vertices):
+            fig = PlotlyRenderer3D.add_point(fig, v, color=color, size=10, show_label=False)
         return fig
 
 
