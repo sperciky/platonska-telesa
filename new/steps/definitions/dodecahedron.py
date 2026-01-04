@@ -397,12 +397,13 @@ d = 2/φ ≈ {2/PHI:.3f}
         """Vykreslení hotového dvanáctistěnu (matplotlib - legacy)"""
         self.setup_axes(ax)
         ax.set_title(self.metadata.title, fontsize=14, fontweight='bold')
-        
+
         Renderer3D.draw_edges(ax, self.dodeca_vertices, self.sample_edges,
                              color='green', width=2)
-        
-        for i, v in enumerate(self.dodeca_vertices):
-            color = 'blue' if i < 8 else 'red'
+
+        # Vertex colors matching Step 2: orange cube + red/green/blue rectangles
+        colors_vertices = ['orange']*8 + ['red']*4 + ['green']*4 + ['blue']*4
+        for v, color in zip(self.dodeca_vertices, colors_vertices):
             Renderer3D.draw_point(ax, v, color=color, size=100)
 
     def render_plotly_diagram(self) -> go.Figure:
@@ -410,13 +411,11 @@ d = 2/φ ≈ {2/PHI:.3f}
         fig = PlotlyRenderer3D.create_figure(axis_limits=(-2, 2))
         fig = PlotlyRenderer3D.add_title(fig, self.metadata.title)
 
-        # Nakresli stěny, pokud je to zapnuté
+        # Nakresli stěny, pokud je to zapnuté - fixed blue color at 0.3 opacity
         if st.session_state.get('show_faces', False):
-            opacity = st.session_state.get('face_opacity', 0.5)
-            color = st.session_state.get('face_color', '#00CED1')
             fig = PlotlyRenderer3D.add_faces(
                 fig, self.dodeca_vertices, self.dodeca_faces,
-                color=color, opacity=opacity
+                color='blue', opacity=0.3
             )
 
         # Nakresli hrany
@@ -424,9 +423,9 @@ d = 2/φ ≈ {2/PHI:.3f}
         fig = PlotlyRenderer3D.add_edges(fig, self.dodeca_vertices, self.sample_edges,
                                          color='green', width=edge_width)
 
-        # Nakresli vrcholy
+        # Nakresli vrcholy - colors matching Step 2: orange cube + red/green/blue rectangles
         vertex_size = st.session_state.get('vertex_size', 10)
-        for i, v in enumerate(self.dodeca_vertices):
-            color = 'blue' if i < 8 else 'red'
+        colors_vertices = ['orange']*8 + ['red']*4 + ['green']*4 + ['blue']*4
+        for v, color in zip(self.dodeca_vertices, colors_vertices):
             fig = PlotlyRenderer3D.add_point(fig, v, color=color, size=vertex_size, show_label=False)
         return fig
