@@ -214,9 +214,9 @@ Vytvoříme **3 obdélníky** se zlatým řezem, **kolmé na sebe**:
         for rect_idx, color in zip(self.rectangles, rect_colors):
             edges = [
                 (rect_idx[0], rect_idx[1]),
-                (rect_idx[1], rect_idx[3]),
-                (rect_idx[3], rect_idx[2]),
-                (rect_idx[2], rect_idx[0])
+                (rect_idx[1], rect_idx[2]),
+                (rect_idx[2], rect_idx[3]),
+                (rect_idx[3], rect_idx[0])
             ]
             for edge in edges:
                 Renderer3D.draw_edge(
@@ -242,9 +242,9 @@ Vytvoříme **3 obdélníky** se zlatým řezem, **kolmé na sebe**:
         for rect_idx, color in zip(self.rectangles, rect_colors):
             edges = [
                 (rect_idx[0], rect_idx[1]),
-                (rect_idx[1], rect_idx[3]),
-                (rect_idx[3], rect_idx[2]),
-                (rect_idx[2], rect_idx[0])
+                (rect_idx[1], rect_idx[2]),
+                (rect_idx[2], rect_idx[3]),
+                (rect_idx[3], rect_idx[0])
             ]
             for edge in edges:
                 fig = PlotlyRenderer3D.add_edge(
