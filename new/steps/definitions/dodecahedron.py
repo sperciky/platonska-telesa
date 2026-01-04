@@ -324,9 +324,18 @@ class DodecaStep3_Complete(Step):
                 if len(path) == 5:
                     # Zkontroluj, zda poslední vrchol je spojen se startem
                     if start in adjacency[path[-1]]:
-                        # Normalizuj cyklus (rotuj tak, aby začínal nejmenším indexem)
+                        # Normalizuj cyklus - oba směry (hodinový i protihodinový)
                         min_idx = path.index(min(path))
-                        normalized = tuple(path[min_idx:] + path[:min_idx])
+                        forward = tuple(path[min_idx:] + path[:min_idx])
+
+                        # Reverse direction
+                        reversed_path = [path[0]] + path[1:][::-1]
+                        min_idx_rev = reversed_path.index(min(reversed_path))
+                        backward = tuple(reversed_path[min_idx_rev:] + reversed_path[:min_idx_rev])
+
+                        # Použij lexikograficky menší variantu
+                        normalized = min(forward, backward)
+
                         if normalized not in visited_faces:
                             visited_faces.add(normalized)
                             cycles.append(list(path))
@@ -346,16 +355,15 @@ class DodecaStep3_Complete(Step):
             dfs([])
             return cycles
 
-        # Najdi cykly ze všech vrcholů
+        # Najdi všechny cykly ze všech vrcholů
         for v in range(len(self.dodeca_vertices)):
             cycles = find_cycles_from_vertex(v)
             for cycle in cycles:
-                if len(faces) < 12:
-                    # Seřaď vrcholy do správného kruhového pořadí
-                    sorted_cycle = self._sort_pentagon_vertices(cycle)
-                    faces.append(sorted_cycle)
+                # Seřaď vrcholy do správného kruhového pořadí
+                sorted_cycle = self._sort_pentagon_vertices(cycle)
+                faces.append(sorted_cycle)
 
-        # Pokud jsme nenašli všech 12, použij správnou manuální definici
+        # Pokud jsme nenašli přesně 12, použij správnou manuální definici
         if len(faces) != 12:
             # Dodecahedron s vrcholy (±1,±1,±1), (0,±1/φ,±φ), (±1/φ,±φ,0), (±φ,0,±1/φ)
             # Tyto stěny jsou vypočítány správně pro toto konkrétní uspořádání vrcholů
