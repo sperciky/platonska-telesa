@@ -254,7 +254,7 @@ class DodecaStep3_Complete(Step):
         ]:
             dodeca_vertices.append(coords)
         self.dodeca_vertices = np.array(dodeca_vertices)
-        
+
         # Najdi hrany (body ve vzdálenosti 2/φ)
         sample_edges = []
         for i in range(len(self.dodeca_vertices)):
@@ -263,6 +263,84 @@ class DodecaStep3_Complete(Step):
                 if 1.1 < dist < 1.3:
                     sample_edges.append((i, j))
         self.sample_edges = sample_edges[:30]
+
+        # 12 pětiúhelníkových stěn dvanáctistěnu
+        # Najdeme je dynamicky na základě grafu hran
+        self.dodeca_faces = self._find_pentagonal_faces()
+
+    def _find_pentagonal_faces(self):
+        """Najde 12 pětiúhelníkových stěn na základě adjacence vrcholů"""
+        # Vytvoř adjacenční seznam z hran
+        adjacency = {i: set() for i in range(len(self.dodeca_vertices))}
+        for i, j in self.sample_edges:
+            adjacency[i].add(j)
+            adjacency[j].add(i)
+
+        # Zkusíme najít všechny cykly délky 5
+        faces = []
+        visited_faces = set()
+
+        def find_pentagon_from_edge(start, second):
+            """Najde pětiúhelník začínající hranou (start, second)"""
+            path = [start, second]
+            current = second
+
+            # Najdi další 3 vrcholy tvořící pětiúhelník
+            for _ in range(3):
+                # Najdi sousedy aktuálního vrcholu
+                neighbors = adjacency[current]
+                # Vyber souseda, který není předchozí vrchol v cestě
+                next_candidates = neighbors - set(path)
+
+                # Vyber vrchol, který má hranu zpět k dalšímu vrcholu v pětiúhelníku
+                for candidate in next_candidates:
+                    # Pro poslední vrchol: musí mít hranu zpět k start
+                    if len(path) == 4:
+                        if start in adjacency[candidate]:
+                            path.append(candidate)
+                            return path
+                    else:
+                        # Přidej prvního vhodného kandidáta
+                        path.append(candidate)
+                        current = candidate
+                        break
+                else:
+                    return None
+
+            return None
+
+        # Projdi všechny hrany a najdi pětiúhelníky
+        for edge in self.sample_edges:
+            i, j = edge
+            pentagon = find_pentagon_from_edge(i, j)
+            if pentagon and len(pentagon) == 5:
+                # Normalizuj pětiúhelník (začni nejmenším indexem)
+                normalized = tuple(sorted([tuple(sorted(pentagon[k:] + pentagon[:k])) for k in range(5)])[0])
+                if normalized not in visited_faces:
+                    visited_faces.add(normalized)
+                    faces.append(list(pentagon))
+
+            if len(faces) >= 12:
+                break
+
+        # Pokud jsme nenašli všech 12, použij záložní manuální definici
+        if len(faces) < 12:
+            faces = [
+                [0, 8, 10, 3, 11],
+                [0, 11, 9, 2, 12],
+                [0, 12, 4, 16, 8],
+                [1, 9, 11, 3, 10],
+                [1, 10, 8, 16, 5],
+                [1, 5, 17, 13, 9],
+                [2, 9, 13, 14, 12],
+                [3, 15, 18, 10, 11],
+                [4, 12, 14, 6, 17],
+                [5, 16, 4, 17, 6],
+                [6, 14, 13, 15, 19],
+                [7, 18, 15, 13, 17]
+            ]
+
+        return faces[:12]
 
     def get_metadata(self) -> StepMetadata:
         return StepMetadata(
@@ -319,8 +397,14 @@ d = 2/φ ≈ {2/PHI:.3f}
         fig = PlotlyRenderer3D.create_figure(axis_limits=(-2, 2))
         fig = PlotlyRenderer3D.add_title(fig, self.metadata.title)
 
-        # TODO: Add pentagonal faces when provided by user
-        # Dodecahedron has 12 pentagonal faces - complex to define correctly
+        # Nakresli stěny, pokud je to zapnuté
+        if st.session_state.get('show_faces', False):
+            opacity = st.session_state.get('face_opacity', 0.5)
+            color = st.session_state.get('face_color', '#00CED1')
+            fig = PlotlyRenderer3D.add_faces(
+                fig, self.dodeca_vertices, self.dodeca_faces,
+                color=color, opacity=opacity
+            )
 
         # Nakresli hrany
         edge_width = st.session_state.get('edge_width', 2)
