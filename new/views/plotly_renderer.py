@@ -300,3 +300,99 @@ class PlotlyRenderer3D:
             )
         )
         return fig
+
+    @staticmethod
+    def add_face(fig: go.Figure,
+                 vertices: np.ndarray,
+                 face_indices: List[int],
+                 color: str = 'lightblue',
+                 opacity: float = 0.3,
+                 show_edges: bool = False) -> go.Figure:
+        """
+        Přidá jednu stěnu (plochu) do Plotly figure
+
+        Args:
+            fig: Plotly Figure instance
+            vertices: Array všech vrcholů tvaru (N, 3)
+            face_indices: Seznam indexů vrcholů tvořících stěnu
+            color: Barva stěny
+            opacity: Průhlednost (0.0 = průhledná, 1.0 = neprůhledná)
+            show_edges: Zda zobrazit okraje stěny
+
+        Returns:
+            Upravený Figure
+        """
+        # Pro trojúhelník použij Mesh3d
+        if len(face_indices) == 3:
+            face_vertices = vertices[face_indices]
+            fig.add_trace(go.Mesh3d(
+                x=face_vertices[:, 0],
+                y=face_vertices[:, 1],
+                z=face_vertices[:, 2],
+                i=[0],
+                j=[1],
+                k=[2],
+                color=color,
+                opacity=opacity,
+                hoverinfo='skip',
+                showlegend=False,
+                flatshading=True
+            ))
+        # Pro čtyřúhelník rozděl na dva trojúhelníky
+        elif len(face_indices) == 4:
+            face_vertices = vertices[face_indices]
+            fig.add_trace(go.Mesh3d(
+                x=face_vertices[:, 0],
+                y=face_vertices[:, 1],
+                z=face_vertices[:, 2],
+                i=[0, 0],
+                j=[1, 2],
+                k=[2, 3],
+                color=color,
+                opacity=opacity,
+                hoverinfo='skip',
+                showlegend=False,
+                flatshading=True
+            ))
+        # Pro pětiúhelník rozděl na tři trojúhelníky
+        elif len(face_indices) == 5:
+            face_vertices = vertices[face_indices]
+            fig.add_trace(go.Mesh3d(
+                x=face_vertices[:, 0],
+                y=face_vertices[:, 1],
+                z=face_vertices[:, 2],
+                i=[0, 0, 0],
+                j=[1, 2, 3],
+                k=[2, 3, 4],
+                color=color,
+                opacity=opacity,
+                hoverinfo='skip',
+                showlegend=False,
+                flatshading=True
+            ))
+
+        return fig
+
+    @staticmethod
+    def add_faces(fig: go.Figure,
+                  vertices: np.ndarray,
+                  faces: List[List[int]],
+                  color: str = 'lightblue',
+                  opacity: float = 0.3) -> go.Figure:
+        """
+        Přidá více stěn najednou
+
+        Args:
+            fig: Plotly Figure instance
+            vertices: Array vrcholů tvaru (N, 3)
+            faces: Seznam stěn, kde každá stěna je seznam indexů vrcholů
+            color: Barva stěn
+            opacity: Průhlednost
+
+        Returns:
+            Upravený Figure
+        """
+        for face in faces:
+            PlotlyRenderer3D.add_face(fig, vertices, face, color, opacity)
+
+        return fig
