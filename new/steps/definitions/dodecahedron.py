@@ -5,6 +5,7 @@ Dodecahedron construction steps
 import numpy as np
 from matplotlib.figure import Figure
 import plotly.graph_objects as go
+import streamlit as st
 from steps.base_step import Step, StepMetadata
 from views.renderer import Renderer3D
 from views.plotly_renderer import PlotlyRenderer3D
@@ -69,9 +70,9 @@ To znamená, že potřebujeme přidat **ještě 12 vrcholů** k těmto 8.
         ax.set_title(self.metadata.title, fontsize=14, fontweight='bold')
 
         Renderer3D.draw_edges(ax, self.cube_vertices, self.cube_edges,
-                             color='blue', width=2)
+                             color='orange', width=2)
         labels = [str(i+1) for i in range(8)]
-        Renderer3D.draw_points(ax, self.cube_vertices, colors='blue',
+        Renderer3D.draw_points(ax, self.cube_vertices, colors='orange',
                               sizes=120, labels=labels)
 
     def render_plotly_diagram(self) -> go.Figure:
@@ -79,9 +80,9 @@ To znamená, že potřebujeme přidat **ještě 12 vrcholů** k těmto 8.
         fig = PlotlyRenderer3D.create_figure(axis_limits=(-2, 2))
         fig = PlotlyRenderer3D.add_title(fig, self.metadata.title)
         fig = PlotlyRenderer3D.add_edges(fig, self.cube_vertices, self.cube_edges,
-                                         color='blue', width=3)
+                                         color='orange', width=3)
         labels = [str(i+1) for i in range(8)]
-        fig = PlotlyRenderer3D.add_points(fig, self.cube_vertices, colors='blue',
+        fig = PlotlyRenderer3D.add_points(fig, self.cube_vertices, colors='orange',
                                           sizes=12, labels=labels)
         return fig
 
@@ -317,11 +318,18 @@ d = 2/φ ≈ {2/PHI:.3f}
         """Vykreslení hotového dvanáctistěnu (Plotly - interaktivní)"""
         fig = PlotlyRenderer3D.create_figure(axis_limits=(-2, 2))
         fig = PlotlyRenderer3D.add_title(fig, self.metadata.title)
-        
+
+        # TODO: Add pentagonal faces when provided by user
+        # Dodecahedron has 12 pentagonal faces - complex to define correctly
+
+        # Nakresli hrany
+        edge_width = st.session_state.get('edge_width', 2)
         fig = PlotlyRenderer3D.add_edges(fig, self.dodeca_vertices, self.sample_edges,
-                                         color='green', width=2)
-        
+                                         color='green', width=edge_width)
+
+        # Nakresli vrcholy
+        vertex_size = st.session_state.get('vertex_size', 10)
         for i, v in enumerate(self.dodeca_vertices):
             color = 'blue' if i < 8 else 'red'
-            fig = PlotlyRenderer3D.add_point(fig, v, color=color, size=10, show_label=False)
+            fig = PlotlyRenderer3D.add_point(fig, v, color=color, size=vertex_size, show_label=False)
         return fig

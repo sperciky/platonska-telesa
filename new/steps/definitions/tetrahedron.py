@@ -355,17 +355,19 @@ Můžeš si ověřit, že vzdálenost mezi **jakýmikoliv dvěma** vrcholy je v�
             )
 
         # Nakresli hrany čtyřstěnu
+        edge_width = st.session_state.get('edge_width', 4)
         fig = PlotlyRenderer3D.add_edges(
             fig, self.tetra_vertices, self.tetra_edges,
-            color='blue', width=4
+            color='blue', width=edge_width
         )
 
         # Nakresli vrcholy
+        vertex_size = st.session_state.get('vertex_size', 15)
         labels = ['A', 'B', 'C', 'D']
         fig = PlotlyRenderer3D.add_points(
             fig, self.tetra_vertices,
             colors='red',
-            sizes=15,
+            sizes=vertex_size,
             labels=labels
         )
 
