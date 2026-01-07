@@ -36,6 +36,7 @@ from steps.definitions.duality_nested_octahedra import DualityNestedOctahedra
 from steps.definitions.duality_icosahedron_dodecahedron import DualityIcosahedronDodecahedron
 from steps.definitions.duality_tetrahedron_self import DualityTetrahedronSelf
 from steps.definitions.bonus import BonusStep_TriangleCenter
+from steps.definitions.bonus_why_five import BonusStep_WhyOnlyFive
 
 
 def register_all_steps():
@@ -73,6 +74,7 @@ def register_all_steps():
 
     # Bonus
     registry.register(BonusStep_TriangleCenter())
+    registry.register(BonusStep_WhyOnlyFive())
 
 
 def initialize_session_state():
