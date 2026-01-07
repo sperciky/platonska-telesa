@@ -365,6 +365,12 @@ Dosadíme do vzorce pro výpočet přepony v pravoúhlém trojúhelníku (Pythag
             color='blue', width=3, alpha=0.8
         )
 
+        # Zvýrazni hranu AB (pro demonstraci výpočtu)
+        Renderer3D.draw_edge(
+            ax, self.tetra_vertices[0], self.tetra_vertices[1],
+            color='yellow', width=4
+        )
+
         # Nakresli vrcholy čtyřstěnu
         labels = ['A', 'B', 'C', 'D']
         Renderer3D.draw_points(
@@ -404,6 +410,12 @@ Dosadíme do vzorce pro výpočet přepony v pravoúhlém trojúhelníku (Pythag
         fig = PlotlyRenderer3D.add_edges(
             fig, self.tetra_vertices, self.tetra_edges,
             color='blue', width=edge_width
+        )
+
+        # Zvýrazni hranu AB (pro demonstraci výpočtu)
+        fig = PlotlyRenderer3D.add_edge(
+            fig, self.tetra_vertices[0], self.tetra_vertices[1],
+            color='yellow', width=edge_width + 2
         )
 
         # Nakresli vrcholy čtyřstěnu

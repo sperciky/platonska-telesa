@@ -82,7 +82,7 @@ def initialize_session_state():
 
     # Nastavení pro vykreslování stěn
     if 'show_faces' not in st.session_state:
-        st.session_state.show_faces = False
+        st.session_state.show_faces = True
 
     if 'face_opacity' not in st.session_state:
         st.session_state.face_opacity = 0.5
