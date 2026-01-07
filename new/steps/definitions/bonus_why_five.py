@@ -200,21 +200,23 @@ Proto staří Řekové považovali těchto 5 těles za **dokonalá** a **posvát
                 hoverinfo='skip'
             ), row=row, col=col)
 
-            # Add title and angle sum
+            # Add title and angle sum - move further down to avoid overlap
             status = '✅' if total_angle < 360 else '❌'
+            # Calculate subplot index: (row-1)*4 + col
+            subplot_idx = (row - 1) * 4 + col
             fig.add_annotation(
                 text=f'{title}<br>{total_angle:.0f}° {status}',
-                x=0, y=-2.5,
-                xref=f'x{col if row==1 else col+4}', yref=f'y{col if row==1 else col+4}',
+                x=0, y=-3.2,
+                xref=f'x{subplot_idx}', yref=f'y{subplot_idx}',
                 showarrow=False,
-                font=dict(size=12, color='green' if total_angle < 360 else 'red')
+                font=dict(size=11, color='green' if total_angle < 360 else 'red')
             )
 
-        # Create subplots
+        # Create subplots with more vertical spacing for labels
         fig = make_subplots(
             rows=3, cols=4,
             subplot_titles=('', '', '', '', '', '', '', '', '', '', '', ''),
-            vertical_spacing=0.12,
+            vertical_spacing=0.15,
             horizontal_spacing=0.08,
             specs=[[{'type': 'scatter'}] * 4 for _ in range(3)]
         )
@@ -236,36 +238,39 @@ Proto staří Řekové považovali těchto 5 těles za **dokonalá** a **posvát
         # Row 3: Hexagons (120° each)
         draw_polygons_at_vertex(fig, 3, 1, 3, 6, 'lightcoral', '3 šestiúhelníky', 360)
 
-        # Add text explanations in remaining cells
+        # Add Platonic solid names ABOVE the valid configurations
+        # Row 1, Col 1: 3 trojúhelníky -> ČTYŘSTĚN
         fig.add_annotation(
             text='<b>ČTYŘSTĚN</b><br>tetraedr',
-            x=0, y=0, xref='x2', yref='y2',
-            showarrow=False, font=dict(size=10, color='darkgreen')
+            x=0, y=2.0, xref='x1', yref='y1',
+            showarrow=False, font=dict(size=11, color='darkgreen')
         )
+        # Row 1, Col 2: 4 trojúhelníky -> OSMISTĚN
         fig.add_annotation(
             text='<b>OSMISTĚN</b><br>oktaedr',
-            x=0, y=0, xref='x3', yref='y3',
-            showarrow=False, font=dict(size=10, color='darkgreen')
+            x=0, y=2.0, xref='x2', yref='y2',
+            showarrow=False, font=dict(size=11, color='darkgreen')
         )
+        # Row 1, Col 3: 5 trojúhelníků -> DVACETISTĚN
         fig.add_annotation(
             text='<b>DVACETISTĚN</b><br>ikosaedr',
-            x=0, y=0, xref='x4', yref='y4',
-            showarrow=False, font=dict(size=10, color='darkgreen')
+            x=0, y=2.0, xref='x3', yref='y3',
+            showarrow=False, font=dict(size=11, color='darkgreen')
         )
-
+        # Row 2, Col 1: 3 čtverce -> KRYCHLE
         fig.add_annotation(
             text='<b>KRYCHLE</b><br>hexaedr',
-            x=0, y=0, xref='x5', yref='y5',
-            showarrow=False, font=dict(size=10, color='darkgreen')
+            x=0, y=2.0, xref='x5', yref='y5',
+            showarrow=False, font=dict(size=11, color='darkgreen')
         )
-
+        # Row 2, Col 3: 3 pětiúhelníky -> DVANÁCTISTĚN
         fig.add_annotation(
             text='<b>DVANÁCTISTĚN</b><br>dodekaedr',
-            x=0, y=0, xref='x7', yref='y7',
-            showarrow=False, font=dict(size=10, color='darkgreen')
+            x=0, y=2.0, xref='x7', yref='y7',
+            showarrow=False, font=dict(size=11, color='darkgreen')
         )
 
-        # Update all axes
+        # Update all axes - increase range to accommodate labels
         for i in range(1, 13):
             fig.update_xaxes(
                 showgrid=False, showticklabels=False, zeroline=False,
@@ -273,7 +278,7 @@ Proto staří Řekové považovali těchto 5 těles za **dokonalá** a **posvát
             )
             fig.update_yaxes(
                 showgrid=False, showticklabels=False, zeroline=False,
-                range=[-3, 3], scaleanchor=f'x{i}', scaleratio=1,
+                range=[-3.8, 2.8], scaleanchor=f'x{i}', scaleratio=1,
                 row=(i-1)//4 + 1, col=(i-1)%4 + 1
             )
 
