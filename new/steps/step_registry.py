@@ -19,7 +19,6 @@ class StepRegistry:
     """
 
     _instance = None
-    _steps: List[Step] = []
 
     def __new__(cls):
         if cls._instance is None:
