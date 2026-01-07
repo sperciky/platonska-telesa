@@ -285,15 +285,23 @@ class TetraStep3_Complete(Step):
         return f"""
 ## Čtyřstěn - Krok 3: Hotový čtyřstěn!
 
-### Vlastnosti čtyřstěnu:
+### Vlastnosti tohoto čtyřstěnu:
 
-- **4 vrcholy** (A, B, C, D)
-- **6 hran** (každý vrchol spojen s každým)
-- **4 trojúhelníkové stěny** (rovnostranné trojúhelníky)
+**4 vrcholy (A, B, C, D)**
+- odpovídají 4 vybraným vrcholům krychle
+
+**6 hran**
+- každá hrana tohoto čtyřstěnu je **diagonálou stěny krychle**
+- všechny tyto diagonály stěn v krychli jsou **stejně dlouhé**
+
+**4 trojúhelníkové stěny**
+- díky předchozímu víme, že se jedná o **rovnostranné trojúhelníky**
 
 ---
 
-### Výpočet délky hrany:
+### Výpočet délky hrany čtyřstěnu:
+
+**Složitější výpočet v 3D prostoru:**
 
 Vezměme například hranu AB:
 
@@ -306,13 +314,17 @@ d = √[0 + 4 + 4]
 d = √8 = 2√2 ≈ {edge_length:.3f}
 ```
 
----
+**Zjednodušení v 2D prostoru:**
 
-### Ověření pravidelnosti:
+Vezměme jednu stěnu naší krychle. Tu tvoří čtverec o délce hrany 2 (AE, BE a další).
 
-✅ **Všechny hrany mají stejnou délku!**
+Dosadíme do vzorce pro výpočet přepony v pravoúhlém trojúhelníku (Pythagorova věta):
 
-Můžeš si ověřit, že vzdálenost mezi **jakýmikoliv dvěma** vrcholy je vždy **2√2**.
+```
+|AB|² = |AE|² + |BE|²
+|AB| = √(2² + 2²) = √8
+|AB| = 2√2
+```
 
 ---
 
