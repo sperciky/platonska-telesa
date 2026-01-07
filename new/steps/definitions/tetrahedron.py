@@ -239,6 +239,16 @@ class TetraStep3_Complete(Step):
 
     def __init__(self):
         super().__init__()
+        # Vrcholy krychle (pro kontext)
+        self.cube_vertices = np.array([
+            [-1, -1, -1], [-1, -1,  1], [-1,  1, -1], [-1,  1,  1],
+            [ 1, -1, -1], [ 1, -1,  1], [ 1,  1, -1], [ 1,  1,  1]
+        ])
+        self.cube_edges = [
+            (0, 1), (0, 2), (0, 4), (1, 3), (1, 5), (2, 3),
+            (2, 6), (3, 7), (4, 5), (4, 6), (5, 7), (6, 7)
+        ]
+
         # Vrcholy čtyřstěnu
         self.tetra_vertices = np.array([
             [ 1,  1,  1],  # Vrchol 7
@@ -325,13 +335,21 @@ Můžeš si ověřit, že vzdálenost mezi **jakýmikoliv dvěma** vrcholy je v�
         self.setup_axes(ax)
         ax.set_title(self.metadata.title, fontsize=14, fontweight='bold')
 
+        # Nakresli krychli v pozadí (oranžová)
+        Renderer3D.draw_edges(
+            ax, self.cube_vertices, self.cube_edges,
+            color='orange', width=2
+        )
+        for v in self.cube_vertices:
+            Renderer3D.draw_point(ax, v, color='orange', size=60)
+
         # Nakresli hrany čtyřstěnu
         Renderer3D.draw_edges(
             ax, self.tetra_vertices, self.tetra_edges,
             color='blue', width=3, alpha=0.8
         )
 
-        # Nakresli vrcholy
+        # Nakresli vrcholy čtyřstěnu
         labels = ['A', 'B', 'C', 'D']
         Renderer3D.draw_points(
             ax, self.tetra_vertices,
@@ -344,6 +362,14 @@ Můžeš si ověřit, že vzdálenost mezi **jakýmikoliv dvěma** vrcholy je v�
         """Vykreslení hotového čtyřstěnu (Plotly - interaktivní)"""
         fig = PlotlyRenderer3D.create_figure(axis_limits=(-2, 2))
         fig = PlotlyRenderer3D.add_title(fig, self.metadata.title)
+
+        # Nakresli krychli v pozadí (oranžová)
+        fig = PlotlyRenderer3D.add_edges(
+            fig, self.cube_vertices, self.cube_edges,
+            color='orange', width=3
+        )
+        for v in self.cube_vertices:
+            fig = PlotlyRenderer3D.add_point(fig, v, color='orange', size=8, show_label=False)
 
         # Nakresli stěny, pokud je to zapnuté
         if st.session_state.get('show_faces', False):
@@ -361,7 +387,7 @@ Můžeš si ověřit, že vzdálenost mezi **jakýmikoliv dvěma** vrcholy je v�
             color='blue', width=edge_width
         )
 
-        # Nakresli vrcholy
+        # Nakresli vrcholy čtyřstěnu
         vertex_size = st.session_state.get('vertex_size', 15)
         labels = ['A', 'B', 'C', 'D']
         fig = PlotlyRenderer3D.add_points(
