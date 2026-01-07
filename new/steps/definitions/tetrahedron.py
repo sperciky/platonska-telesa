@@ -285,15 +285,23 @@ class TetraStep3_Complete(Step):
         return f"""
 ## Čtyřstěn - Krok 3: Hotový čtyřstěn!
 
-### Vlastnosti čtyřstěnu:
+### Vlastnosti tohoto čtyřstěnu:
 
-- **4 vrcholy** (A, B, C, D)
-- **6 hran** (každý vrchol spojen s každým)
-- **4 trojúhelníkové stěny** (rovnostranné trojúhelníky)
+**4 vrcholy (A, B, C, D)**
+- odpovídají 4 vybraným vrcholům krychle
+
+**6 hran**
+- každá hrana tohoto čtyřstěnu je **diagonálou stěny krychle**
+- všechny tyto diagonály stěn v krychli jsou **stejně dlouhé**
+
+**4 trojúhelníkové stěny**
+- díky předchozímu víme, že se jedná o **rovnostranné trojúhelníky**
 
 ---
 
-### Výpočet délky hrany:
+### Výpočet délky hrany čtyřstěnu:
+
+**Složitější výpočet v 3D prostoru:**
 
 Vezměme například hranu AB:
 
@@ -306,13 +314,17 @@ d = √[0 + 4 + 4]
 d = √8 = 2√2 ≈ {edge_length:.3f}
 ```
 
----
+**Zjednodušení v 2D prostoru:**
 
-### Ověření pravidelnosti:
+Vezměme jednu stěnu naší krychle. Tu tvoří čtverec o délce hrany 2 (AE, BE a další).
 
-✅ **Všechny hrany mají stejnou délku!**
+Dosadíme do vzorce pro výpočet přepony v pravoúhlém trojúhelníku (Pythagorova věta):
 
-Můžeš si ověřit, že vzdálenost mezi **jakýmikoliv dvěma** vrcholy je vždy **2√2**.
+```
+|AB|² = |AE|² + |BE|²
+|AB| = √(2² + 2²) = √8
+|AB| = 2√2
+```
 
 ---
 
@@ -340,8 +352,12 @@ Můžeš si ověřit, že vzdálenost mezi **jakýmikoliv dvěma** vrcholy je v�
             ax, self.cube_vertices, self.cube_edges,
             color='orange', width=2
         )
-        for v in self.cube_vertices:
-            Renderer3D.draw_point(ax, v, color='orange', size=60)
+        for i, v in enumerate(self.cube_vertices):
+            # Označ vrchol 5 (E) pro demonstraci Pythagorovy věty
+            if i == 5:  # Vertex at (1, -1, 1) - on same face as A and B
+                Renderer3D.draw_point(ax, v, color='orange', size=80, label='E')
+            else:
+                Renderer3D.draw_point(ax, v, color='orange', size=60)
 
         # Nakresli hrany čtyřstěnu
         Renderer3D.draw_edges(
@@ -368,16 +384,19 @@ Můžeš si ověřit, že vzdálenost mezi **jakýmikoliv dvěma** vrcholy je v�
             fig, self.cube_vertices, self.cube_edges,
             color='orange', width=3
         )
-        for v in self.cube_vertices:
-            fig = PlotlyRenderer3D.add_point(fig, v, color='orange', size=8, show_label=False)
+        for i, v in enumerate(self.cube_vertices):
+            # Označ vrchol 5 (E) pro demonstraci Pythagorovy věty
+            if i == 5:  # Vertex at (1, -1, 1) - on same face as A and B
+                fig = PlotlyRenderer3D.add_point(fig, v, color='orange', size=10, label='E')
+            else:
+                fig = PlotlyRenderer3D.add_point(fig, v, color='orange', size=8, show_label=False)
 
-        # Nakresli stěny, pokud je to zapnuté
+        # Nakresli stěny, pokud je to zapnuté - fixed blue color
         if st.session_state.get('show_faces', False):
             opacity = st.session_state.get('face_opacity', 0.5)
-            color = st.session_state.get('face_color', '#00CED1')
             fig = PlotlyRenderer3D.add_faces(
                 fig, self.tetra_vertices, self.tetra_faces,
-                color=color, opacity=opacity
+                color='blue', opacity=opacity
             )
 
         # Nakresli hrany čtyřstěnu
