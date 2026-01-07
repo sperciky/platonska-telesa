@@ -242,31 +242,31 @@ Proto staří Řekové považovali těchto 5 těles za **dokonalá** a **posvát
         # Row 1, Col 1: 3 trojúhelníky -> ČTYŘSTĚN
         fig.add_annotation(
             text='<b>ČTYŘSTĚN</b><br>tetraedr',
-            x=0, y=2.0, xref='x1', yref='y1',
+            x=0, y=2.5, xref='x1', yref='y1',
             showarrow=False, font=dict(size=11, color='darkgreen')
         )
         # Row 1, Col 2: 4 trojúhelníky -> OSMISTĚN
         fig.add_annotation(
             text='<b>OSMISTĚN</b><br>oktaedr',
-            x=0, y=2.0, xref='x2', yref='y2',
+            x=0, y=2.5, xref='x2', yref='y2',
             showarrow=False, font=dict(size=11, color='darkgreen')
         )
         # Row 1, Col 3: 5 trojúhelníků -> DVACETISTĚN
         fig.add_annotation(
             text='<b>DVACETISTĚN</b><br>ikosaedr',
-            x=0, y=2.0, xref='x3', yref='y3',
+            x=0, y=2.5, xref='x3', yref='y3',
             showarrow=False, font=dict(size=11, color='darkgreen')
         )
         # Row 2, Col 1: 3 čtverce -> KRYCHLE
         fig.add_annotation(
             text='<b>KRYCHLE</b><br>hexaedr',
-            x=0, y=2.0, xref='x5', yref='y5',
+            x=0, y=2.5, xref='x5', yref='y5',
             showarrow=False, font=dict(size=11, color='darkgreen')
         )
         # Row 2, Col 3: 3 pětiúhelníky -> DVANÁCTISTĚN
         fig.add_annotation(
             text='<b>DVANÁCTISTĚN</b><br>dodekaedr',
-            x=0, y=2.0, xref='x7', yref='y7',
+            x=0, y=2.5, xref='x7', yref='y7',
             showarrow=False, font=dict(size=11, color='darkgreen')
         )
 
