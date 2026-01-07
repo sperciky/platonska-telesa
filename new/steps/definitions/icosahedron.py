@@ -361,10 +361,10 @@ Toto není náhoda - je to důsledek speciálních vlastností zlatého řezu:
         self.setup_axes(ax)
         ax.set_title(self.metadata.title, fontsize=14, fontweight='bold')
 
-        # Nakresli hrany
+        # Nakresli hrany - orange color
         Renderer3D.draw_edges(
             ax, self.icosa_vertices, self.icosa_edges,
-            color='blue', width=2
+            color='orange', width=2
         )
 
         # Nakresli vrcholy - colors from Step 2: red/green/blue rectangles
@@ -378,18 +378,18 @@ Toto není náhoda - je to důsledek speciálních vlastností zlatého řezu:
         fig = PlotlyRenderer3D.create_figure(axis_limits=(-2, 2))
         fig = PlotlyRenderer3D.add_title(fig, self.metadata.title)
 
-        # Nakresli stěny, pokud je to zapnuté - fixed blue color at 0.3 opacity
+        # Nakresli stěny, pokud je to zapnuté - fixed orange color at 0.3 opacity
         if st.session_state.get('show_faces', False):
             fig = PlotlyRenderer3D.add_faces(
                 fig, self.icosa_vertices, self.icosa_faces,
-                color='blue', opacity=0.3
+                color='orange', opacity=0.3
             )
 
-        # Nakresli hrany
+        # Nakresli hrany - orange color
         edge_width = st.session_state.get('edge_width', 3)
         fig = PlotlyRenderer3D.add_edges(
             fig, self.icosa_vertices, self.icosa_edges,
-            color='blue', width=edge_width
+            color='orange', width=edge_width
         )
 
         # Nakresli vrcholy - colors from Step 2: red/green/blue rectangles
