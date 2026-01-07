@@ -212,11 +212,11 @@ Osmistěn je **duální** k hranu! To znamená:
         fig = PlotlyRenderer3D.create_figure(axis_limits=(-2, 2))
         fig = PlotlyRenderer3D.add_title(fig, self.metadata.title)
 
-        # Nakresli stěny, pokud je to zapnuté - fixed khaki color at 0.3 opacity
+        # Nakresli stěny, pokud je to zapnuté - fixed blue color at 0.3 opacity
         if st.session_state.get('show_faces', False):
             fig = PlotlyRenderer3D.add_faces(
                 fig, self.octa_vertices, self.octa_faces,
-                color='khaki', opacity=0.3
+                color='blue', opacity=0.3
             )
 
         # Nakresli hrany
