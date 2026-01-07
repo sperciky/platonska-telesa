@@ -258,7 +258,21 @@ def render_main_content():
 
         # Vytvoř interaktivní Plotly figure
         fig = create_plotly_figure(step)
-        st.plotly_chart(fig, width='stretch')
+
+        # Configure Plotly to preserve camera view in downloads
+        config = {
+            'displayModeBar': True,
+            'displaylogo': False,
+            'toImageButtonOptions': {
+                'format': 'png',
+                'filename': f'platonic_solid_step_{st.session_state.current_step}',
+                'height': 800,
+                'width': 800,
+                'scale': 2
+            }
+        }
+
+        st.plotly_chart(fig, use_container_width=True, config=config)
 
     # Pravý sloupec - popis
     with col_description:
