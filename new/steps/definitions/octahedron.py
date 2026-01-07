@@ -201,27 +201,22 @@ Osmistěn je **duální** k hranu! To znamená:
             color='blue', width=2
         )
 
-        # Nakresli vrcholy
+        # Nakresli vrcholy - colors from Step 1
+        colors = ['red', 'red', 'green', 'green', 'blue', 'blue']
         labels = [str(i+1) for i in range(6)]
-        Renderer3D.draw_points(
-            ax, self.octa_vertices,
-            colors='red',
-            sizes=150,
-            labels=labels
-        )
+        for v, color, label in zip(self.octa_vertices, colors, labels):
+            Renderer3D.draw_point(ax, v, color=color, size=150, label=label)
 
     def render_plotly_diagram(self) -> go.Figure:
         """Vykreslení hotového osmistěnu (Plotly - interaktivní)"""
         fig = PlotlyRenderer3D.create_figure(axis_limits=(-2, 2))
         fig = PlotlyRenderer3D.add_title(fig, self.metadata.title)
 
-        # Nakresli stěny, pokud je to zapnuté
+        # Nakresli stěny, pokud je to zapnuté - fixed khaki color at 0.3 opacity
         if st.session_state.get('show_faces', False):
-            opacity = st.session_state.get('face_opacity', 0.5)
-            color = st.session_state.get('face_color', '#00CED1')
             fig = PlotlyRenderer3D.add_faces(
                 fig, self.octa_vertices, self.octa_faces,
-                color=color, opacity=opacity
+                color='khaki', opacity=0.3
             )
 
         # Nakresli hrany
@@ -231,14 +226,11 @@ Osmistěn je **duální** k hranu! To znamená:
             color='blue', width=edge_width
         )
 
-        # Nakresli vrcholy
+        # Nakresli vrcholy - colors from Step 1
         vertex_size = st.session_state.get('vertex_size', 15)
+        colors = ['red', 'red', 'green', 'green', 'blue', 'blue']
         labels = [str(i+1) for i in range(6)]
-        fig = PlotlyRenderer3D.add_points(
-            fig, self.octa_vertices,
-            colors='red',
-            sizes=vertex_size,
-            labels=labels
-        )
+        for v, color, label in zip(self.octa_vertices, colors, labels):
+            fig = PlotlyRenderer3D.add_point(fig, v, color=color, size=vertex_size, label=label)
 
         return fig
