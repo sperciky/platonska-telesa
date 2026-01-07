@@ -132,52 +132,144 @@ Proto staří Řekové považovali těchto 5 těles za **dokonalá** a **posvát
 
     def render_plotly_diagram(self) -> go.Figure:
         """Vykreslení vizualizace důkazu (Plotly - interaktivní)"""
-        # Create a figure showing the angular constraints
-        fig = go.Figure()
+        from plotly.subplots import make_subplots
+        import math
 
-        # Data for visualization
-        solids = [
-            ('Čtyřstěn', 3, 60, 180, 'green'),
-            ('Osmistěn', 4, 60, 240, 'green'),
-            ('Dvacetistěn', 5, 60, 300, 'green'),
-            ('Krychle', 3, 90, 270, 'blue'),
-            ('Dvanáctistěn', 3, 108, 324, 'orange'),
-        ]
+        # Helper function to create polygon vertices around a central point
+        def polygon_vertices(n_sides, angle_deg, radius=1.0, rotation_offset=0):
+            """Generate vertices for a regular polygon"""
+            vertices = []
+            angle_rad = math.radians(angle_deg)
+            for i in range(n_sides):
+                angle = rotation_offset + i * angle_rad
+                x = radius * math.cos(angle)
+                y = radius * math.sin(angle)
+                vertices.append((x, y))
+            vertices.append(vertices[0])  # Close the polygon
+            return vertices
 
-        impossible = [
-            ('6 trojúhelníků', 6, 60, 360, 'red'),
-            ('4 čtverce', 4, 90, 360, 'red'),
-            ('4 pětiúhelníky', 4, 108, 432, 'red'),
-            ('3 šestiúhelníky', 3, 120, 360, 'red'),
-        ]
+        def draw_polygons_at_vertex(fig, row, col, n_polygons, n_sides, color, title, total_angle):
+            """Draw n_polygons regular polygons meeting at a vertex"""
+            angle_per_polygon = 360.0 / n_sides  # Internal angle of regular polygon
+            internal_angle = (n_sides - 2) * 180.0 / n_sides
 
-        # Create bar chart
-        names = [s[0] for s in solids] + [i[0] for i in impossible]
-        angles = [s[3] for s in solids] + [i[3] for i in impossible]
-        colors = [s[4] for s in solids] + [i[4] for i in impossible]
+            # Calculate the angle to rotate each polygon
+            rotation_step = 2 * math.pi / n_polygons
 
-        fig.add_trace(go.Bar(
-            x=names,
-            y=angles,
-            marker_color=colors,
-            text=[f'{a}°' for a in angles],
-            textposition='outside',
-            hovertemplate='%{x}<br>Součet úhlů: %{y}°<extra></extra>'
-        ))
+            for i in range(n_polygons):
+                rotation = i * rotation_step
+                vertices = polygon_vertices(n_sides, 360/n_sides, radius=1.5, rotation_offset=rotation)
 
-        # Add 360° limit line
-        fig.add_hline(y=360, line_dash="dash", line_color="red",
-                     annotation_text="Limit 360° (rovinné)",
-                     annotation_position="right")
+                xs = [v[0] for v in vertices]
+                ys = [v[1] for v in vertices]
+
+                # Fill color based on validity
+                fillcolor = color if total_angle < 360 else 'lightcoral' if total_angle == 360 else 'red'
+
+                fig.add_trace(go.Scatter(
+                    x=xs, y=ys,
+                    mode='lines',
+                    fill='toself',
+                    fillcolor=fillcolor,
+                    opacity=0.3,
+                    line=dict(color='darkgreen' if total_angle < 360 else 'darkred', width=2),
+                    showlegend=False,
+                    hoverinfo='text',
+                    hovertext=f'{n_polygons} × {internal_angle:.0f}° = {total_angle:.0f}°'
+                ), row=row, col=col)
+
+            # Add central point
+            fig.add_trace(go.Scatter(
+                x=[0], y=[0],
+                mode='markers',
+                marker=dict(size=8, color='black'),
+                showlegend=False,
+                hoverinfo='skip'
+            ), row=row, col=col)
+
+            # Add title and angle sum
+            status = '✅' if total_angle < 360 else '❌'
+            fig.add_annotation(
+                text=f'{title}<br>{total_angle:.0f}° {status}',
+                x=0, y=-2.5,
+                xref=f'x{col if row==1 else col+4}', yref=f'y{col if row==1 else col+4}',
+                showarrow=False,
+                font=dict(size=12, color='green' if total_angle < 360 else 'red')
+            )
+
+        # Create subplots
+        fig = make_subplots(
+            rows=3, cols=4,
+            subplot_titles=('', '', '', '', '', '', '', '', '', '', '', ''),
+            vertical_spacing=0.12,
+            horizontal_spacing=0.08,
+            specs=[[{'type': 'scatter'}] * 4 for _ in range(3)]
+        )
+
+        # Row 1: Triangles (60° each)
+        draw_polygons_at_vertex(fig, 1, 1, 3, 3, 'lightgreen', '3 trojúhelníky', 180)
+        draw_polygons_at_vertex(fig, 1, 2, 4, 3, 'lightgreen', '4 trojúhelníky', 240)
+        draw_polygons_at_vertex(fig, 1, 3, 5, 3, 'lightgreen', '5 trojúhelníků', 300)
+        draw_polygons_at_vertex(fig, 1, 4, 6, 3, 'lightcoral', '6 trojúhelníků', 360)
+
+        # Row 2: Squares (90° each)
+        draw_polygons_at_vertex(fig, 2, 1, 3, 4, 'lightblue', '3 čtverce', 270)
+        draw_polygons_at_vertex(fig, 2, 2, 4, 4, 'lightcoral', '4 čtverce', 360)
+
+        # Row 2: Pentagons (108° each)
+        draw_polygons_at_vertex(fig, 2, 3, 3, 5, 'lightyellow', '3 pětiúhelníky', 324)
+        draw_polygons_at_vertex(fig, 2, 4, 4, 5, 'red', '4 pětiúhelníky', 432)
+
+        # Row 3: Hexagons (120° each)
+        draw_polygons_at_vertex(fig, 3, 1, 3, 6, 'lightcoral', '3 šestiúhelníky', 360)
+
+        # Add text explanations in remaining cells
+        fig.add_annotation(
+            text='<b>ČTYŘSTĚN</b><br>tetraedr',
+            x=0, y=0, xref='x2', yref='y2',
+            showarrow=False, font=dict(size=10, color='darkgreen')
+        )
+        fig.add_annotation(
+            text='<b>OSMISTĚN</b><br>oktaedr',
+            x=0, y=0, xref='x3', yref='y3',
+            showarrow=False, font=dict(size=10, color='darkgreen')
+        )
+        fig.add_annotation(
+            text='<b>DVACETISTĚN</b><br>ikosaedr',
+            x=0, y=0, xref='x4', yref='y4',
+            showarrow=False, font=dict(size=10, color='darkgreen')
+        )
+
+        fig.add_annotation(
+            text='<b>KRYCHLE</b><br>hexaedr',
+            x=0, y=0, xref='x5', yref='y5',
+            showarrow=False, font=dict(size=10, color='darkgreen')
+        )
+
+        fig.add_annotation(
+            text='<b>DVANÁCTISTĚN</b><br>dodekaedr',
+            x=0, y=0, xref='x7', yref='y7',
+            showarrow=False, font=dict(size=10, color='darkgreen')
+        )
+
+        # Update all axes
+        for i in range(1, 13):
+            fig.update_xaxes(
+                showgrid=False, showticklabels=False, zeroline=False,
+                range=[-3, 3], row=(i-1)//4 + 1, col=(i-1)%4 + 1
+            )
+            fig.update_yaxes(
+                showgrid=False, showticklabels=False, zeroline=False,
+                range=[-3, 3], scaleanchor=f'x{i}', scaleratio=1,
+                row=(i-1)//4 + 1, col=(i-1)%4 + 1
+            )
 
         fig.update_layout(
-            title="Součet úhlů u vrcholu - Proč jen 5 Platónských těles?",
-            xaxis_title="Konfigurace",
-            yaxis_title="Součet úhlů (°)",
-            yaxis_range=[0, 450],
-            height=600,
+            title_text="Proč existuje pouze 5 Platónských těles?<br><sub>Součet úhlů u vrcholu musí být < 360°</sub>",
+            title_x=0.5,
+            height=900,
             showlegend=False,
-            hovermode='x unified'
+            plot_bgcolor='white'
         )
 
         return fig
