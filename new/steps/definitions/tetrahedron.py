@@ -352,8 +352,12 @@ Dosadíme do vzorce pro výpočet přepony v pravoúhlém trojúhelníku (Pythag
             ax, self.cube_vertices, self.cube_edges,
             color='orange', width=2
         )
-        for v in self.cube_vertices:
-            Renderer3D.draw_point(ax, v, color='orange', size=60)
+        for i, v in enumerate(self.cube_vertices):
+            # Označ vrchol 5 (E) pro demonstraci Pythagorovy věty
+            if i == 5:  # Vertex at (1, -1, 1) - on same face as A and B
+                Renderer3D.draw_point(ax, v, color='orange', size=80, label='E')
+            else:
+                Renderer3D.draw_point(ax, v, color='orange', size=60)
 
         # Nakresli hrany čtyřstěnu
         Renderer3D.draw_edges(
@@ -380,16 +384,19 @@ Dosadíme do vzorce pro výpočet přepony v pravoúhlém trojúhelníku (Pythag
             fig, self.cube_vertices, self.cube_edges,
             color='orange', width=3
         )
-        for v in self.cube_vertices:
-            fig = PlotlyRenderer3D.add_point(fig, v, color='orange', size=8, show_label=False)
+        for i, v in enumerate(self.cube_vertices):
+            # Označ vrchol 5 (E) pro demonstraci Pythagorovy věty
+            if i == 5:  # Vertex at (1, -1, 1) - on same face as A and B
+                fig = PlotlyRenderer3D.add_point(fig, v, color='orange', size=10, label='E')
+            else:
+                fig = PlotlyRenderer3D.add_point(fig, v, color='orange', size=8, show_label=False)
 
-        # Nakresli stěny, pokud je to zapnuté
+        # Nakresli stěny, pokud je to zapnuté - fixed blue color
         if st.session_state.get('show_faces', False):
             opacity = st.session_state.get('face_opacity', 0.5)
-            color = st.session_state.get('face_color', '#00CED1')
             fig = PlotlyRenderer3D.add_faces(
                 fig, self.tetra_vertices, self.tetra_faces,
-                color=color, opacity=opacity
+                color='blue', opacity=opacity
             )
 
         # Nakresli hrany čtyřstěnu
