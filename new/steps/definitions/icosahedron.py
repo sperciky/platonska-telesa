@@ -367,27 +367,22 @@ Toto není náhoda - je to důsledek speciálních vlastností zlatého řezu:
             color='blue', width=2
         )
 
-        # Nakresli vrcholy
+        # Nakresli vrcholy - colors from Step 2: red/green/blue rectangles
+        colors_vertices = ['red']*4 + ['green']*4 + ['blue']*4
         labels = [chr(65+i) for i in range(12)]  # A-L
-        Renderer3D.draw_points(
-            ax, self.icosa_vertices,
-            colors='red',
-            sizes=120,
-            labels=labels
-        )
+        for v, color, label in zip(self.icosa_vertices, colors_vertices, labels):
+            Renderer3D.draw_point(ax, v, color=color, size=120, label=label)
 
     def render_plotly_diagram(self) -> go.Figure:
         """Vykreslení hotového dvacetistěnu (Plotly - interaktivní)"""
         fig = PlotlyRenderer3D.create_figure(axis_limits=(-2, 2))
         fig = PlotlyRenderer3D.add_title(fig, self.metadata.title)
 
-        # Nakresli stěny, pokud je to zapnuté
+        # Nakresli stěny, pokud je to zapnuté - fixed blue color at 0.3 opacity
         if st.session_state.get('show_faces', False):
-            opacity = st.session_state.get('face_opacity', 0.5)
-            color = st.session_state.get('face_color', '#00CED1')
             fig = PlotlyRenderer3D.add_faces(
                 fig, self.icosa_vertices, self.icosa_faces,
-                color=color, opacity=opacity
+                color='blue', opacity=0.3
             )
 
         # Nakresli hrany
@@ -397,14 +392,11 @@ Toto není náhoda - je to důsledek speciálních vlastností zlatého řezu:
             color='blue', width=edge_width
         )
 
-        # Nakresli vrcholy
+        # Nakresli vrcholy - colors from Step 2: red/green/blue rectangles
         vertex_size = st.session_state.get('vertex_size', 12)
+        colors_vertices = ['red']*4 + ['green']*4 + ['blue']*4
         labels = [chr(65+i) for i in range(12)]  # A-L
-        fig = PlotlyRenderer3D.add_points(
-            fig, self.icosa_vertices,
-            colors='red',
-            sizes=vertex_size,
-            labels=labels
-        )
+        for v, color, label in zip(self.icosa_vertices, colors_vertices, labels):
+            fig = PlotlyRenderer3D.add_point(fig, v, color=color, size=vertex_size, label=label)
 
         return fig
