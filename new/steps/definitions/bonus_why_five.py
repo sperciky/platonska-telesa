@@ -135,30 +135,43 @@ Proto staří Řekové považovali těchto 5 těles za **dokonalá** a **posvát
         from plotly.subplots import make_subplots
         import math
 
-        # Helper function to create polygon vertices around a central point
-        def polygon_vertices(n_sides, angle_deg, radius=1.0, rotation_offset=0):
-            """Generate vertices for a regular polygon"""
-            vertices = []
-            angle_rad = math.radians(angle_deg)
+        # Helper function to create polygon with one vertex at origin
+        def polygon_at_vertex(n_sides, edge_length=2.0, rotation_offset=0):
+            """Generate vertices for a regular polygon with one vertex at origin"""
+            vertices = [(0, 0)]  # Start at origin (shared vertex)
+
+            # Calculate internal angle
+            internal_angle = (n_sides - 2) * 180.0 / n_sides
+            external_angle = 180.0 - internal_angle
+
+            # First edge starts from origin at rotation_offset angle
+            current_angle = rotation_offset
+            current_x, current_y = 0, 0
+
             for i in range(n_sides):
-                angle = rotation_offset + i * angle_rad
-                x = radius * math.cos(angle)
-                y = radius * math.sin(angle)
-                vertices.append((x, y))
-            vertices.append(vertices[0])  # Close the polygon
+                # Move along current edge
+                next_x = current_x + edge_length * math.cos(current_angle)
+                next_y = current_y + edge_length * math.sin(current_angle)
+                vertices.append((next_x, next_y))
+
+                # Turn by external angle for next edge
+                current_angle += math.radians(external_angle)
+                current_x, current_y = next_x, next_y
+
             return vertices
 
         def draw_polygons_at_vertex(fig, row, col, n_polygons, n_sides, color, title, total_angle):
-            """Draw n_polygons regular polygons meeting at a vertex"""
-            angle_per_polygon = 360.0 / n_sides  # Internal angle of regular polygon
+            """Draw n_polygons regular polygons meeting at a shared vertex"""
             internal_angle = (n_sides - 2) * 180.0 / n_sides
 
-            # Calculate the angle to rotate each polygon
-            rotation_step = 2 * math.pi / n_polygons
+            # Distribute polygons evenly around the shared vertex
+            # Each polygon occupies internal_angle degrees
+            angle_step = internal_angle * math.pi / 180.0
 
             for i in range(n_polygons):
-                rotation = i * rotation_step
-                vertices = polygon_vertices(n_sides, 360/n_sides, radius=1.5, rotation_offset=rotation)
+                # Rotate each polygon so they share the origin vertex
+                rotation = i * angle_step
+                vertices = polygon_at_vertex(n_sides, edge_length=1.5, rotation_offset=rotation)
 
                 xs = [v[0] for v in vertices]
                 ys = [v[1] for v in vertices]
