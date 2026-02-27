@@ -112,11 +112,16 @@ def _is_3d_figure(fig) -> bool:
 
 def _ascii_filename(text: str) -> str:
     """Replace Czech diacritics and spaces with ASCII equivalents."""
-    mapping = str.maketrans(
-        'áčďéěíňóřšťúůýžÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ',
-        'acdeeinnorstuuyzACDEEINNORSTUUYZ',
-    )
-    return text.translate(mapping).replace(' ', '_')
+    replacements = {
+        'á': 'a', 'č': 'c', 'ď': 'd', 'é': 'e', 'ě': 'e', 'í': 'i',
+        'ň': 'n', 'ó': 'o', 'ř': 'r', 'š': 's', 'ť': 't', 'ú': 'u',
+        'ů': 'u', 'ý': 'y', 'ž': 'z',
+        'Á': 'A', 'Č': 'C', 'Ď': 'D', 'É': 'E', 'Ě': 'E', 'Í': 'I',
+        'Ň': 'N', 'Ó': 'O', 'Ř': 'R', 'Š': 'S', 'Ť': 'T', 'Ú': 'U',
+        'Ů': 'U', 'Ý': 'Y', 'Ž': 'Z',
+        ' ': '_',
+    }
+    return ''.join(replacements.get(c, c) for c in text)
 
 
 def save_rotating_gif(fig, output_path: Path, n_frames: int, fps: int,
