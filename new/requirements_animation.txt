@@ -1,0 +1,11 @@
+# Extra dependencies for GIF generation and Google Slides upload
+# Install with:  pip install -r requirements_animation.txt
+
+# --- GIF generation (generate_animations.py) ---
+kaleido>=0.2.1          # Plotly static image export (PNG frames)
+Pillow>=9.0.0           # Stitch PNG frames into animated GIF
+
+# --- Google Slides upload (create_google_slides.py) ---
+google-api-python-client>=2.0.0
+google-auth-httplib2>=0.1.0
+google-auth-oauthlib>=0.5.0
