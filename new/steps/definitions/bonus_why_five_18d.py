@@ -31,13 +31,6 @@ Tato 3D vizualizace ukazuje:
 - **Zelená:** Validní konfigurace (<360°) → stěny tvoří 3D "kužel"
 - **Žlutá/Oranžová:** Rovinná konfigurace (=360°) → stěny leží v rovině
 - **Červená:** Nemožná konfigurace (>360°) → stěny se překrývají!
-
-Klíčové poznatky:
-1. **3 trojúhelníky** (180°) → tvoří "ostrou" špičku tetraedru
-2. **6 trojúhelníků** (360°) → ploché, jako šestiúhelník na rovině
-3. **3 čtverce** (270°) → tvoří roh krychle (90° volného prostoru)
-4. **4 čtverce** (360°) → ploché, jako na šachovnici
-5. **3 pětiúhelníky** (324°) → mírně zakřivené, dodekaedr
 """
 
     def render_diagram(self, fig: Figure, ax) -> None:
@@ -55,28 +48,20 @@ Klíčové poznatky:
         """Vykreslení 3D vizualizace vrcholů (Plotly - interaktivní)"""
         from plotly.subplots import make_subplots
 
-        # Configuration for different vertex arrangements
         configs = [
-            # Valid configurations (green)
             {"n": 3, "count": 3, "name": "3 trojúhelníky", "solid": "Tetraedr", "valid": True},
             {"n": 3, "count": 4, "name": "4 trojúhelníky", "solid": "Oktaedr", "valid": True},
             {"n": 3, "count": 5, "name": "5 trojúhelníků", "solid": "Ikosaedr", "valid": True},
             {"n": 4, "count": 3, "name": "3 čtverce", "solid": "Krychle", "valid": True},
             {"n": 5, "count": 3, "name": "3 pětiúhelníky", "solid": "Dodekaedr", "valid": True},
-
-            # Planar configurations (yellow/orange)
             {"n": 3, "count": 6, "name": "6 trojúhelníků", "solid": "Rovina", "valid": False, "planar": True},
             {"n": 4, "count": 4, "name": "4 čtverce", "solid": "Rovina", "valid": False, "planar": True},
             {"n": 6, "count": 3, "name": "3 šestiúhelníky", "solid": "Rovina", "valid": False, "planar": True},
-
-            # Impossible configurations (red)
             {"n": 3, "count": 7, "name": "7 trojúhelníků", "solid": "Nemožné!", "valid": False, "planar": False},
             {"n": 5, "count": 4, "name": "4 pětiúhelníky", "solid": "Nemožné!", "valid": False, "planar": False},
         ]
 
-        rows = 2
-        cols = 5
-
+        rows, cols = 2, 5
         fig = make_subplots(
             rows=rows, cols=cols,
             specs=[[{'type': 'scene'}] * cols] * rows,
@@ -85,17 +70,12 @@ Klíčové poznatky:
             horizontal_spacing=0.02
         )
 
-        # Generate each configuration
         for idx, config in enumerate(configs):
-            row = idx // cols + 1
-            col = idx % cols + 1
-
+            row, col = idx // cols + 1, idx % cols + 1
             traces = self._create_vertex_3d(config)
-
             for trace in traces:
                 fig.add_trace(trace, row=row, col=col)
 
-            # Configure the 3D scene
             scene_name = 'scene' if idx == 0 else f'scene{idx + 1}'
             fig.update_layout(**{
                 scene_name: dict(
@@ -103,110 +83,148 @@ Klíčové poznatky:
                     yaxis=dict(range=[-1.5, 1.5], showticklabels=False, title=''),
                     zaxis=dict(range=[-0.5, 1.5], showticklabels=False, title=''),
                     aspectmode='cube',
-                    camera=dict(
-                        eye=dict(x=1.3, y=1.3, z=1.2),
-                        up=dict(x=0, y=0, z=1)
-                    ),
+                    camera=dict(eye=dict(x=1.3, y=1.3, z=1.2), up=dict(x=0, y=0, z=1)),
                     bgcolor='white'
                 )
             })
 
         fig.update_layout(
-            title=dict(
-                text="3D Vizualizace: Jak se stěny potkávají ve vrcholu",
-                font=dict(size=24, color='#2c3e50'),
-                x=0.5,
-                xanchor='center'
-            ),
-            showlegend=False,
-            height=800,
-            margin=dict(t=120, l=10, r=10, b=10),
-            paper_bgcolor='#f8f9fa',
+            title=dict(text="3D Vizualizace: Jak se stěny potkávají ve vrcholu",
+                      font=dict(size=24, color='#2c3e50'), x=0.5, xanchor='center'),
+            showlegend=False, height=800,
+            margin=dict(t=120, l=10, r=10, b=10), paper_bgcolor='#f8f9fa'
         )
-
         return fig
 
-    def _create_regular_ngon(self, n: int, edge_length: float) -> List[np.ndarray]:
-        """
-        Create a regular n-sided polygon with one vertex at origin.
-        All edges have the specified length.
-        Returns vertices in local coordinates (before rotation/tilt).
-        """
+    def _get_edges_from_origin(self, n: int, count: int, planar: bool) -> List[np.ndarray]:
+        """Get edge directions from origin that form faces with equal edge lengths"""
+        interior_angle = (n - 2) * 180 / n
+        total_angle = count * interior_angle
+        
+        edge_length = 1.0
+        edges = []
+
+        if planar or total_angle >= 360:
+            # Planar: edges in xy-plane
+            for i in range(count):
+                angle = np.radians(i * 360 / count)
+                edges.append(edge_length * np.array([np.cos(angle), np.sin(angle), 0.0]))
+            return edges
+
+        # 3D cases with equal edge lengths
+        if n == 3:  # Triangles
+            # For equilateral triangles: edges at 120° azimuth, specific elevation
+            # cos(elev) = 1/√3 for equilateral faces
+            elev = np.arccos(1.0 / np.sqrt(3))  # ≈ 54.74°
+            for i in range(count):
+                azim = np.radians(i * 360 / count)
+                edges.append(edge_length * np.array([
+                    np.cos(elev) * np.cos(azim),
+                    np.cos(elev) * np.sin(azim),
+                    np.sin(elev)
+                ]))
+            return edges
+
+        elif n == 4:  # Squares
+            # For cube: perpendicular edges
+            if count == 3:
+                edges = [
+                    edge_length * np.array([1.0, 0.0, 0.0]),
+                    edge_length * np.array([0.0, 1.0, 0.0]),
+                    edge_length * np.array([0.0, 0.0, 1.0])
+                ]
+                return edges
+            else:
+                # Planar fallback
+                for i in range(count):
+                    angle = np.radians(i * 360 / count)
+                    edges.append(edge_length * np.array([np.cos(angle), np.sin(angle), 0.0]))
+                return edges
+
+        elif n == 5:  # Pentagons
+            # For dodecahedron: 3 edges arranged specifically
+            if count == 3:
+                phi = (1 + np.sqrt(5)) / 2
+                # Three edges with correct angles for dodecahedron
+                e1 = np.array([1.0, 0.0, phi])
+                e2 = np.array([0.0, phi, 1.0])
+                e3 = np.array([phi, 1.0, 0.0])
+                # Normalize to edge_length
+                edges = [edge_length * e / np.linalg.norm(e) for e in [e1, e2, e3]]
+                return edges
+            else:
+                for i in range(count):
+                    angle = np.radians(i * 360 / count)
+                    edges.append(edge_length * np.array([np.cos(angle), np.sin(angle), 0.0]))
+                return edges
+
+        elif n == 6:  # Hexagons
+            # Planar
+            for i in range(count):
+                angle = np.radians(i * 360 / count)
+                edges.append(edge_length * np.array([np.cos(angle), np.sin(angle), 0.0]))
+            return edges
+
+        # Default fallback
+        for i in range(count):
+            angle = np.radians(i * 360 / count)
+            edges.append(edge_length * np.array([np.cos(angle), np.sin(angle), 0.3]))
+        return edges
+
+    def _create_face(self, e1: np.ndarray, e2: np.ndarray, n: int) -> List[np.ndarray]:
+        """Create a face with n vertices starting from origin with edges e1, e2"""
         origin = np.array([0.0, 0.0, 0.0])
 
         if n == 3:
-            # Equilateral triangle: one vertex at origin, one along +x axis
-            # Third vertex at 60° to make equilateral
-            verts = [
-                origin,
-                np.array([edge_length, 0.0, 0.0]),
-                np.array([edge_length * np.cos(np.radians(60)),
-                         edge_length * np.sin(np.radians(60)),
-                         0.0])
-            ]
-            return verts
+            # Triangle: origin + 2 edges
+            return [origin, e1, e2]
 
         elif n == 4:
-            # Square: one vertex at origin
-            verts = [
-                origin,
-                np.array([edge_length, 0.0, 0.0]),
-                np.array([edge_length, edge_length, 0.0]),
-                np.array([0.0, edge_length, 0.0])
-            ]
-            return verts
+            # Square: origin + e1 + (e1+e2) + e2
+            return [origin, e1, e1 + e2, e2]
 
         elif n == 5:
-            # Regular pentagon: one vertex at origin
-            # Interior angle = 108°
+            # Pentagon: construct remaining vertices
+            # Using the plane defined by origin, e1, e2
+            u = e1 / np.linalg.norm(e1)
+            normal = np.cross(e1, e2)
+            if np.linalg.norm(normal) < 1e-10:
+                return [origin, e1, e2]
+            normal = normal / np.linalg.norm(normal)
+            v = np.cross(normal, u)
+            v = v / np.linalg.norm(v)
+
+            # Pentagon: vertices at 0°, 108°, 216°, 324° from e1
+            edge_len = np.linalg.norm(e1)
             verts = [origin]
-            verts.append(np.array([edge_length, 0.0, 0.0]))
-
-            # Remaining vertices at 108° intervals
-            angle = 108  # degrees
-            for i in range(1, n - 1):
-                current_angle = np.radians(i * angle)
-                verts.append(np.array([
-                    edge_length * np.cos(current_angle),
-                    edge_length * np.sin(current_angle),
-                    0.0
-                ]))
-
-            return verts
+            for i in range(5):
+                angle = np.radians(i * 72)  # 72° = 360°/5
+                pt = edge_len * (np.cos(angle) * u + np.sin(angle) * v)
+                verts.append(pt)
+            return verts[:5]  # Return 5 vertices
 
         elif n == 6:
-            # Regular hexagon: one vertex at origin
-            # Interior angle = 120°
+            # Hexagon
+            u = e1 / np.linalg.norm(e1)
+            normal = np.cross(e1, e2)
+            if np.linalg.norm(normal) < 1e-10:
+                return [origin, e1, e2]
+            normal = normal / np.linalg.norm(normal)
+            v = np.cross(normal, u)
+            v = v / np.linalg.norm(v)
+
+            edge_len = np.linalg.norm(e1)
             verts = [origin]
-            angle = 120  # degrees
+            for i in range(6):
+                angle = np.radians(i * 60)
+                pt = edge_len * (np.cos(angle) * u + np.sin(angle) * v)
+                verts.append(pt)
+            return verts[:6]
 
-            for i in range(n - 1):
-                current_angle = np.radians(i * angle)
-                verts.append(np.array([
-                    edge_length * np.cos(current_angle),
-                    edge_length * np.sin(current_angle),
-                    0.0
-                ]))
-
-            return verts
-
-        else:
-            # Generic
-            verts = [origin]
-            interior_angle = (n - 2) * 180 / n
-
-            for i in range(n - 1):
-                angle_rad = np.radians(i * interior_angle)
-                verts.append(np.array([
-                    edge_length * np.cos(angle_rad),
-                    edge_length * np.sin(angle_rad),
-                    0.0
-                ]))
-
-            return verts
+        return [origin, e1, e2]
 
     def _create_vertex_3d(self, config: dict) -> list:
-        """Create 3D visualization of faces meeting at a vertex with EQUAL edge lengths"""
+        """Create 3D visualization with equal edge lengths"""
         n = config['n']
         count = config['count']
         valid = config.get('valid', True)
@@ -215,7 +233,6 @@ Klíčové poznatky:
         interior_angle = (n - 2) * 180 / n
         total_angle = count * interior_angle
 
-        # Colors
         if valid:
             color = 'rgba(46, 204, 113, 0.7)'
             edge_color = 'rgb(39, 174, 96)'
@@ -228,100 +245,53 @@ Klíčové poznatky:
 
         traces = []
         origin = np.array([0.0, 0.0, 0.0])
-        edge_length = 1.0  # All edges will have this length
 
-        # Create faces with regular polygons
-        angular_spacing = 360.0 / count
+        # Get edges from origin
+        edges = self._get_edges_from_origin(n, count, planar)
 
+        # Create faces between consecutive edges
         for i in range(count):
-            # Rotation angle for this face
-            rotation = np.radians(i * angular_spacing)
+            e1 = edges[i]
+            e2 = edges[(i + 1) % count]
 
-            # Create a regular n-gon in local coordinates
-            polygon_verts = self._create_regular_ngon(n, edge_length)
-
-            # Calculate tilt based on configuration
-            if planar or total_angle == 360:
-                # Flat in xy-plane
-                tilt_angle = 0
-            elif total_angle < 360:
-                # Tilt up - valid 3D
-                deficit = 360 - total_angle
-                tilt_angle = min(70, deficit / count * 1.5)
-            else:
-                # Tilt down/overlap - impossible
-                excess = total_angle - 360
-                tilt_angle = -min(30, excess / count * 0.8)
-
-            # Transform vertices: rotate around z, then tilt
-            transformed_verts = []
-            for v in polygon_verts:
-                # Rotate around z-axis
-                x = v[0] * np.cos(rotation) - v[1] * np.sin(rotation)
-                y = v[0] * np.sin(rotation) + v[1] * np.cos(rotation)
-                z = v[2]
-
-                # Tilt (rotate around y-axis after z-rotation)
-                tilt_rad = np.radians(tilt_angle)
-                x_new = x * np.cos(tilt_rad) - z * np.sin(tilt_rad)
-                z_new = x * np.sin(tilt_rad) + z * np.cos(tilt_rad)
-
-                transformed_verts.append(np.array([x_new, y, z_new]))
+            verts = self._create_face(e1, e2, n)
 
             # Create mesh
-            x_coords = [v[0] for v in transformed_verts]
-            y_coords = [v[1] for v in transformed_verts]
-            z_coords = [v[2] for v in transformed_verts]
+            x_coords = [v[0] for v in verts]
+            y_coords = [v[1] for v in verts]
+            z_coords = [v[2] for v in verts]
 
-            # Triangulate from origin (vertex 0)
-            i_indices = []
-            j_indices = []
-            k_indices = []
-            for vtx_idx in range(1, len(transformed_verts) - 1):
+            # Triangulate
+            i_indices, j_indices, k_indices = [], [], []
+            for vtx_idx in range(1, len(verts) - 1):
                 i_indices.append(0)
                 j_indices.append(vtx_idx)
                 k_indices.append(vtx_idx + 1)
 
             traces.append(go.Mesh3d(
-                x=x_coords,
-                y=y_coords,
-                z=z_coords,
-                i=i_indices,
-                j=j_indices,
-                k=k_indices,
-                color=color,
-                opacity=0.75,
-                flatshading=False,
-                hoverinfo='skip'
+                x=x_coords, y=y_coords, z=z_coords,
+                i=i_indices, j=j_indices, k=k_indices,
+                color=color, opacity=0.75, flatshading=False, hoverinfo='skip'
             ))
 
-            # Add edges
-            for vtx_idx in range(len(transformed_verts)):
-                v1 = transformed_verts[vtx_idx]
-                v2 = transformed_verts[(vtx_idx + 1) % len(transformed_verts)]
-
+            # Edges
+            for vtx_idx in range(len(verts)):
+                v1, v2 = verts[vtx_idx], verts[(vtx_idx + 1) % len(verts)]
                 traces.append(go.Scatter3d(
-                    x=[v1[0], v2[0]],
-                    y=[v1[1], v2[1]],
-                    z=[v1[2], v2[2]],
-                    mode='lines',
-                    line=dict(color=edge_color, width=4),
-                    hoverinfo='skip',
-                    showlegend=False
+                    x=[v1[0], v2[0]], y=[v1[1], v2[1]], z=[v1[2], v2[2]],
+                    mode='lines', line=dict(color=edge_color, width=4),
+                    hoverinfo='skip', showlegend=False
                 ))
 
-        # Add central vertex marker
+        # Central vertex
         traces.append(go.Scatter3d(
-            x=[0],
-            y=[0],
-            z=[0],
+            x=[0], y=[0], z=[0],
             mode='markers+text',
             marker=dict(size=12, color='darkblue'),
             text=f'{total_angle:.0f}°',
             textposition='top center',
             textfont=dict(size=10, color='black'),
-            hoverinfo='skip',
-            showlegend=False
+            hoverinfo='skip', showlegend=False
         ))
 
         return traces
