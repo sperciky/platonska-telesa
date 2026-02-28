@@ -143,14 +143,49 @@ Tato 3D vizualizace ukazuje:
                 return edges
 
         elif n == 5:  # Pentagons
-            # For dodecahedron: 3 edges arranged at correct angle
+            # For dodecahedron: use actual dodecahedron vertices
             if count == 3:
+                # Generate dodecahedron vertices
                 phi = (1 + np.sqrt(5)) / 2
-                # Three edges with dodecahedral geometry
-                e1 = np.array([1.0, 0.0, phi])
-                e2 = np.array([0.0, phi, 1.0])
-                e3 = np.array([phi, 1.0, 0.0])
-                edges = [edge_length * e / np.linalg.norm(e) for e in [e1, e2, e3]]
+                vertices = []
+
+                # 8 vertices at (±1, ±1, ±1)
+                for i in [1, -1]:
+                    for j in [1, -1]:
+                        for k in [1, -1]:
+                            vertices.append(np.array([i, j, k]))
+
+                # 4 vertices at (0, ±φ, ±1/φ)
+                for i in [1, -1]:
+                    for j in [1, -1]:
+                        vertices.append(np.array([0, i*phi, j/phi]))
+
+                # 4 vertices at (±1/φ, 0, ±φ)
+                for i in [1, -1]:
+                    for j in [1, -1]:
+                        vertices.append(np.array([i/phi, 0, j*phi]))
+
+                # 4 vertices at (±φ, ±1/φ, 0)
+                for i in [1, -1]:
+                    for j in [1, -1]:
+                        vertices.append(np.array([i*phi, j/phi, 0]))
+
+                # Pick vertex (1, 1, 1) and find its 3 neighbors
+                center = np.array([1.0, 1.0, 1.0])
+
+                # Find 3 nearest neighbors (these form edges from center)
+                distances = [(np.linalg.norm(v - center), v) for v in vertices]
+                distances.sort(key=lambda x: x[0])
+
+                # Take the 3 nearest (excluding itself at distance 0)
+                neighbors = [v for d, v in distances[1:4]]
+
+                # Shift to origin and normalize
+                edges = []
+                for neighbor in neighbors:
+                    edge_vec = neighbor - center
+                    edges.append(edge_length * edge_vec / np.linalg.norm(edge_vec))
+
                 return edges
             else:
                 for i in range(count):
@@ -222,6 +257,9 @@ Tato 3D vizualizace ukazuje:
 
         elif n == 6:
             # Hexagon with origin as one vertex
+            # For regular hexagon: vertices at origin, e1, v2, v3, v4, e2
+            # Consecutive edges turn by exterior angle = 60° (since interior = 120°)
+
             u = e1 / np.linalg.norm(e1)
             normal = np.cross(e1, e2)
             if np.linalg.norm(normal) < 1e-10:
@@ -230,14 +268,22 @@ Tato 3D vizualizace ukazuje:
             v = np.cross(normal, u)
             v = v / np.linalg.norm(v)
 
-            # Hexagon interior angle = 120°
+            # Start at origin, go to e1, then turn 60° at each step
             verts = [origin, e1]
-            
-            for i in range(1, 5):
-                angle = np.radians(i * 120)
-                pt = edge_len * (np.cos(angle) * u + np.sin(angle) * v)
-                verts.append(pt)
-            
+            current_pos = e1.copy()
+            current_dir = e1 / edge_len  # Direction from origin to e1
+
+            # Create 4 intermediate vertices (total 6: origin, e1, v2, v3, v4, e2)
+            for i in range(4):
+                # Turn by exterior angle 60°
+                angle = np.radians((i+1) * 60)
+                new_dir = np.cos(angle) * u + np.sin(angle) * v
+                current_pos = current_pos + edge_len * new_dir
+
+                # Last vertex should be e2, not computed
+                if i < 3:
+                    verts.append(current_pos)
+
             verts.append(e2)
             return verts
 
