@@ -2,7 +2,7 @@
 Step 21 (18d): Důkaz pomocí úhlů - 3D vizualizace vrcholu
 Bonus step showing 3D visualization of faces meeting at a vertex
 """
-from typing import List
+from typing import List, Tuple
 import numpy as np
 import plotly.graph_objects as go
 from matplotlib.figure import Figure
@@ -12,6 +12,10 @@ from steps.base_step import Step, StepMetadata
 
 class BonusStep_WhyFive_18D(Step):
     """Step 21 (18d): 3D vizualizace - Jak se stýkají stěny ve vrcholu"""
+
+    def __init__(self):
+        super().__init__()
+        self.dodec_faces_cache = None
 
     def get_metadata(self) -> StepMetadata:
         return StepMetadata(
@@ -98,11 +102,279 @@ Tato 3D vizualizace ukazuje:
         )
         return fig
 
+    def _generate_dodecahedron(self) -> Tuple[List[np.ndarray], List[List[int]]]:
+        """Generate dodecahedron vertices and find pentagon faces"""
+        phi = (1 + np.sqrt(5)) / 2
+        vertices = []
+
+        # 8 vertices at (±1, ±1, ±1)
+        for i in [1, -1]:
+            for j in [1, -1]:
+                for k in [1, -1]:
+                    vertices.append(np.array([i, j, k], dtype=float))
+
+        # 4 vertices at (0, ±φ, ±1/φ)
+        for i in [1, -1]:
+            for j in [1, -1]:
+                vertices.append(np.array([0, i*phi, j/phi], dtype=float))
+
+        # 4 vertices at (±1/φ, 0, ±φ)
+        for i in [1, -1]:
+            for j in [1, -1]:
+                vertices.append(np.array([i/phi, 0, j*phi], dtype=float))
+
+        # 4 vertices at (±φ, ±1/φ, 0)
+        for i in [1, -1]:
+            for j in [1, -1]:
+                vertices.append(np.array([i*phi, j/phi, 0], dtype=float))
+
+        # Build adjacency list
+        edge_dist = 2 / phi  # Edge length of dodecahedron
+        adj = {i: [] for i in range(len(vertices))}
+        for i in range(len(vertices)):
+            for j in range(i+1, len(vertices)):
+                dist = np.linalg.norm(vertices[i] - vertices[j])
+                if abs(dist - edge_dist) < 0.01:
+                    adj[i].append(j)
+                    adj[j].append(i)
+
+        # Find all pentagon faces
+        faces = self._find_pentagon_faces(vertices, adj)
+
+        return vertices, faces
+
+    def _find_pentagon_faces(self, vertices: List[np.ndarray], adj: dict) -> List[List[int]]:
+        """Find all pentagon faces in the dodecahedron"""
+        faces = []
+        visited_faces = set()
+
+        for start in range(len(vertices)):
+            for second in adj[start]:
+                # Try to build a pentagon: start -> second -> ... -> start
+                face = self._build_face_cycle(start, second, adj, target_length=5)
+
+                if face and len(face) == 5:
+                    # Normalize face (start with smallest index, go in canonical direction)
+                    face_set = frozenset(face)
+                    if face_set not in visited_faces:
+                        # Verify it's planar and regular
+                        if self._is_valid_pentagon([vertices[i] for i in face]):
+                            faces.append(face)
+                            visited_faces.add(face_set)
+
+        return faces
+
+    def _build_face_cycle(self, start: int, second: int, adj: dict, target_length: int) -> List[int]:
+        """Build a face cycle starting from start->second"""
+        face = [start, second]
+        current = second
+        prev = start
+
+        for _ in range(target_length - 2):
+            # Find next vertex in the cycle (neighbors of current, excluding prev, prefer clockwise)
+            candidates = [v for v in adj[current] if v != prev and v not in face]
+
+            if not candidates:
+                return None
+
+            # For dodecahedron, each vertex has 3 neighbors
+            # We want to go "around" the face, so pick the right candidate
+            # Use geometric criterion: pick the one that continues the face
+            if len(candidates) == 1:
+                next_v = candidates[0]
+            else:
+                # Pick based on smallest dihedral angle (continuing the face)
+                next_v = candidates[0]  # Simplified
+
+            face.append(next_v)
+            prev = current
+            current = next_v
+
+        # Check if it closes (last vertex connects to start)
+        if start in adj[current]:
+            return face
+        return None
+
+    def _is_valid_pentagon(self, verts: List[np.ndarray]) -> bool:
+        """Check if 5 vertices form a valid regular pentagon"""
+        if len(verts) != 5:
+            return False
+
+        # Check all edges have similar length
+        edge_lengths = []
+        for i in range(5):
+            edge_len = np.linalg.norm(verts[i] - verts[(i+1) % 5])
+            edge_lengths.append(edge_len)
+
+        avg_len = np.mean(edge_lengths)
+        if any(abs(l - avg_len) > 0.1 for l in edge_lengths):
+            return False
+
+        # Check planarity
+        p0, p1, p2, p3 = verts[0], verts[1], verts[2], verts[3]
+        normal = np.cross(p1 - p0, p2 - p0)
+        normal = normal / (np.linalg.norm(normal) + 1e-10)
+
+        # All vertices should be in the same plane
+        for v in verts:
+            dist_to_plane = abs(np.dot(v - p0, normal))
+            if dist_to_plane > 0.1:
+                return False
+
+        return True
+
+    def _get_dodecahedron_faces_at_vertex(self, vertex_idx: int) -> List[List[np.ndarray]]:
+        """Get the 3 pentagon faces containing the specified vertex"""
+        if self.dodec_faces_cache is None:
+            vertices, faces = self._generate_dodecahedron()
+            self.dodec_faces_cache = (vertices, faces)
+        else:
+            vertices, faces = self.dodec_faces_cache
+
+        # Find faces containing vertex_idx
+        vertex_faces = []
+        for face_indices in faces:
+            if vertex_idx in face_indices:
+                # Convert indices to actual vertices
+                face_verts = [vertices[i] for i in face_indices]
+                vertex_faces.append(face_verts)
+
+        return vertex_faces[:3]  # Should be exactly 3 for dodecahedron
+
+    def _create_vertex_3d(self, config: dict) -> list:
+        """Create 3D visualization with equal edge lengths"""
+        n = config['n']
+        count = config['count']
+        valid = config.get('valid', True)
+        planar = config.get('planar', False)
+
+        interior_angle = (n - 2) * 180 / n
+        total_angle = count * interior_angle
+
+        if valid:
+            color = 'rgba(46, 204, 113, 0.7)'
+            edge_color = 'rgb(39, 174, 96)'
+        elif planar:
+            color = 'rgba(241, 196, 15, 0.7)'
+            edge_color = 'rgb(243, 156, 18)'
+        else:
+            color = 'rgba(231, 76, 60, 0.7)'
+            edge_color = 'rgb(192, 57, 43)'
+
+        traces = []
+        origin = np.array([0.0, 0.0, 0.0])
+
+        # Special handling for dodecahedron (3 pentagons)
+        if n == 5 and count == 3 and valid:
+            # Get actual dodecahedron faces
+            vertices, faces_indices = self._generate_dodecahedron()
+
+            # Find vertex (1, 1, 1)
+            center_idx = None
+            center = np.array([1.0, 1.0, 1.0])
+            for i, v in enumerate(vertices):
+                if np.linalg.norm(v - center) < 0.01:
+                    center_idx = i
+                    break
+
+            # Get 3 faces containing this vertex
+            vertex_faces_verts = []
+            for face_idx in faces_indices:
+                if center_idx in face_idx:
+                    face_verts = [vertices[i] for i in face_idx]
+                    vertex_faces_verts.append(face_verts)
+
+            # Shift and scale faces so center is at origin
+            edge_length = 1.0
+            actual_edge_len = np.linalg.norm(vertices[faces_indices[0][0]] - vertices[faces_indices[0][1]])
+
+            for face_verts in vertex_faces_verts[:3]:  # Take first 3 faces
+                # Shift to origin
+                shifted_verts = [(v - center) * (edge_length / actual_edge_len) for v in face_verts]
+
+                # Create mesh
+                x_coords = [v[0] for v in shifted_verts]
+                y_coords = [v[1] for v in shifted_verts]
+                z_coords = [v[2] for v in shifted_verts]
+
+                # Triangulate from first vertex
+                i_indices, j_indices, k_indices = [], [], []
+                for vtx_idx in range(1, len(shifted_verts) - 1):
+                    i_indices.append(0)
+                    j_indices.append(vtx_idx)
+                    k_indices.append(vtx_idx + 1)
+
+                traces.append(go.Mesh3d(
+                    x=x_coords, y=y_coords, z=z_coords,
+                    i=i_indices, j=j_indices, k=k_indices,
+                    color=color, opacity=0.75, flatshading=False, hoverinfo='skip'
+                ))
+
+                # Edges
+                for vtx_idx in range(len(shifted_verts)):
+                    v1, v2 = shifted_verts[vtx_idx], shifted_verts[(vtx_idx + 1) % len(shifted_verts)]
+                    traces.append(go.Scatter3d(
+                        x=[v1[0], v2[0]], y=[v1[1], v2[1]], z=[v1[2], v2[2]],
+                        mode='lines', line=dict(color=edge_color, width=4),
+                        hoverinfo='skip', showlegend=False
+                    ))
+
+        else:
+            # Original logic for other shapes
+            edges = self._get_edges_from_origin(n, count, planar)
+
+            # Create faces between consecutive edges
+            for i in range(count):
+                e1 = edges[i]
+                e2 = edges[(i + 1) % count]
+
+                verts = self._create_face(e1, e2, n)
+
+                # Create mesh
+                x_coords = [v[0] for v in verts]
+                y_coords = [v[1] for v in verts]
+                z_coords = [v[2] for v in verts]
+
+                # Triangulate from origin
+                i_indices, j_indices, k_indices = [], [], []
+                for vtx_idx in range(1, len(verts) - 1):
+                    i_indices.append(0)
+                    j_indices.append(vtx_idx)
+                    k_indices.append(vtx_idx + 1)
+
+                traces.append(go.Mesh3d(
+                    x=x_coords, y=y_coords, z=z_coords,
+                    i=i_indices, j=j_indices, k=k_indices,
+                    color=color, opacity=0.75, flatshading=False, hoverinfo='skip'
+                ))
+
+                # Edges
+                for vtx_idx in range(len(verts)):
+                    v1, v2 = verts[vtx_idx], verts[(vtx_idx + 1) % len(verts)]
+                    traces.append(go.Scatter3d(
+                        x=[v1[0], v2[0]], y=[v1[1], v2[1]], z=[v1[2], v2[2]],
+                        mode='lines', line=dict(color=edge_color, width=4),
+                        hoverinfo='skip', showlegend=False
+                    ))
+
+        # Central vertex
+        traces.append(go.Scatter3d(
+            x=[0], y=[0], z=[0],
+            mode='markers+text',
+            marker=dict(size=12, color='darkblue'),
+            text=f'{total_angle:.0f}°',
+            textposition='top center',
+            textfont=dict(size=10, color='black'),
+            hoverinfo='skip', showlegend=False
+        ))
+
+        return traces
+
     def _get_edges_from_origin(self, n: int, count: int, planar: bool) -> List[np.ndarray]:
         """Get edge directions from origin that form faces with equal edge lengths"""
         interior_angle = (n - 2) * 180 / n
         total_angle = count * interior_angle
-        
+
         edge_length = 1.0
         edges = []
 
@@ -142,56 +414,11 @@ Tato 3D vizualizace ukazuje:
                     edges.append(edge_length * np.array([np.cos(angle), np.sin(angle), 0.0]))
                 return edges
 
-        elif n == 5:  # Pentagons
-            # For dodecahedron: use actual dodecahedron vertices
-            if count == 3:
-                # Generate dodecahedron vertices
-                phi = (1 + np.sqrt(5)) / 2
-                vertices = []
-
-                # 8 vertices at (±1, ±1, ±1)
-                for i in [1, -1]:
-                    for j in [1, -1]:
-                        for k in [1, -1]:
-                            vertices.append(np.array([i, j, k]))
-
-                # 4 vertices at (0, ±φ, ±1/φ)
-                for i in [1, -1]:
-                    for j in [1, -1]:
-                        vertices.append(np.array([0, i*phi, j/phi]))
-
-                # 4 vertices at (±1/φ, 0, ±φ)
-                for i in [1, -1]:
-                    for j in [1, -1]:
-                        vertices.append(np.array([i/phi, 0, j*phi]))
-
-                # 4 vertices at (±φ, ±1/φ, 0)
-                for i in [1, -1]:
-                    for j in [1, -1]:
-                        vertices.append(np.array([i*phi, j/phi, 0]))
-
-                # Pick vertex (1, 1, 1) and find its 3 neighbors
-                center = np.array([1.0, 1.0, 1.0])
-
-                # Find 3 nearest neighbors (these form edges from center)
-                distances = [(np.linalg.norm(v - center), v) for v in vertices]
-                distances.sort(key=lambda x: x[0])
-
-                # Take the 3 nearest (excluding itself at distance 0)
-                neighbors = [v for d, v in distances[1:4]]
-
-                # Shift to origin and normalize
-                edges = []
-                for neighbor in neighbors:
-                    edge_vec = neighbor - center
-                    edges.append(edge_length * edge_vec / np.linalg.norm(edge_vec))
-
-                return edges
-            else:
-                for i in range(count):
-                    angle = np.radians(i * 360 / count)
-                    edges.append(edge_length * np.array([np.cos(angle), np.sin(angle), 0.0]))
-                return edges
+        elif n == 5:  # Pentagons (impossible cases)
+            for i in range(count):
+                angle = np.radians(i * 360 / count)
+                edges.append(edge_length * np.array([np.cos(angle), np.sin(angle), 0.0]))
+            return edges
 
         elif n == 6:  # Hexagons
             for i in range(count):
@@ -221,7 +448,7 @@ Tato 3D vizualizace ukazuje:
         elif n == 5:
             # Pentagon with origin as one vertex
             # Vertices: origin, e1, v2, v3, e2 (where v2, v3 are intermediate)
-            
+
             # Create orthonormal basis in the face plane
             u = e1 / np.linalg.norm(e1)
             normal = np.cross(e1, e2)
@@ -236,23 +463,23 @@ Tato 3D vizualizace ukazuje:
             # We need 5 vertices: origin, e1, v2, v3, e2
             # Angles from e1: 0°, 108°, 216°, 324° (back to near origin)
             verts = [origin]
-            
+
             # v1 = e1 (angle 0°)
             verts.append(e1)
-            
+
             # v2 at 108° from e1
             angle2 = np.radians(108)
             v2 = edge_len * (np.cos(angle2) * u + np.sin(angle2) * v)
             verts.append(v2)
-            
-            # v3 at 216° from e1  
+
+            # v3 at 216° from e1
             angle3 = np.radians(216)
             v3 = edge_len * (np.cos(angle3) * u + np.sin(angle3) * v)
             verts.append(v3)
-            
+
             # v4 = e2 (should be at ~288° from e1 for regular pentagon)
             verts.append(e2)
-            
+
             return verts
 
         elif n == 6:
@@ -288,76 +515,3 @@ Tato 3D vizualizace ukazuje:
             return verts
 
         return [origin, e1, e2]
-
-    def _create_vertex_3d(self, config: dict) -> list:
-        """Create 3D visualization with equal edge lengths"""
-        n = config['n']
-        count = config['count']
-        valid = config.get('valid', True)
-        planar = config.get('planar', False)
-
-        interior_angle = (n - 2) * 180 / n
-        total_angle = count * interior_angle
-
-        if valid:
-            color = 'rgba(46, 204, 113, 0.7)'
-            edge_color = 'rgb(39, 174, 96)'
-        elif planar:
-            color = 'rgba(241, 196, 15, 0.7)'
-            edge_color = 'rgb(243, 156, 18)'
-        else:
-            color = 'rgba(231, 76, 60, 0.7)'
-            edge_color = 'rgb(192, 57, 43)'
-
-        traces = []
-        origin = np.array([0.0, 0.0, 0.0])
-
-        # Get edges from origin
-        edges = self._get_edges_from_origin(n, count, planar)
-
-        # Create faces between consecutive edges
-        for i in range(count):
-            e1 = edges[i]
-            e2 = edges[(i + 1) % count]
-
-            verts = self._create_face(e1, e2, n)
-
-            # Create mesh
-            x_coords = [v[0] for v in verts]
-            y_coords = [v[1] for v in verts]
-            z_coords = [v[2] for v in verts]
-
-            # Triangulate from origin
-            i_indices, j_indices, k_indices = [], [], []
-            for vtx_idx in range(1, len(verts) - 1):
-                i_indices.append(0)
-                j_indices.append(vtx_idx)
-                k_indices.append(vtx_idx + 1)
-
-            traces.append(go.Mesh3d(
-                x=x_coords, y=y_coords, z=z_coords,
-                i=i_indices, j=j_indices, k=k_indices,
-                color=color, opacity=0.75, flatshading=False, hoverinfo='skip'
-            ))
-
-            # Edges
-            for vtx_idx in range(len(verts)):
-                v1, v2 = verts[vtx_idx], verts[(vtx_idx + 1) % len(verts)]
-                traces.append(go.Scatter3d(
-                    x=[v1[0], v2[0]], y=[v1[1], v2[1]], z=[v1[2], v2[2]],
-                    mode='lines', line=dict(color=edge_color, width=4),
-                    hoverinfo='skip', showlegend=False
-                ))
-
-        # Central vertex
-        traces.append(go.Scatter3d(
-            x=[0], y=[0], z=[0],
-            mode='markers+text',
-            marker=dict(size=12, color='darkblue'),
-            text=f'{total_angle:.0f}°',
-            textposition='top center',
-            textfont=dict(size=10, color='black'),
-            hoverinfo='skip', showlegend=False
-        ))
-
-        return traces
