@@ -128,149 +128,195 @@ Klíčové poznatky:
 
         return fig
 
-    def _rotation_matrix_z(self, angle_deg):
-        """Rotation matrix around z-axis"""
-        angle = np.radians(angle_deg)
-        return np.array([
-            [np.cos(angle), -np.sin(angle), 0],
-            [np.sin(angle), np.cos(angle), 0],
-            [0, 0, 1]
-        ])
+    def _get_platonic_solid_edges(self, n: int, count: int, planar: bool) -> list:
+        """Get the actual edge directions for each Platonic solid configuration"""
+
+        if planar or count * ((n - 2) * 180 / n) >= 360:
+            # Planar: edges in xy-plane
+            edges = []
+            for i in range(count):
+                angle = np.radians(i * 360 / count)
+                edges.append(np.array([np.cos(angle), np.sin(angle), 0.0]))
+            return edges
+
+        # Valid 3D configurations - use actual Platonic solid geometry
+
+        # Tetrahedron: 3 triangles
+        if n == 3 and count == 3:
+            # Tetrahedral angle: edges at ~109.47° to each other
+            # Place first edge along x-axis, arrange others symmetrically
+            sqrt2 = np.sqrt(2)
+            sqrt6 = np.sqrt(6)
+            edges = [
+                np.array([1.0, 0.0, 0.0]),
+                np.array([-1/3, 2*sqrt2/3, 0.0]),
+                np.array([-1/3, -sqrt2/3, sqrt6/3])
+            ]
+            return edges
+
+        # Octahedron: 4 triangles
+        elif n == 3 and count == 4:
+            # Square pyramid: edges at 90° in xy-plane
+            edges = [
+                np.array([1.0, 0.0, 0.0]),
+                np.array([0.0, 1.0, 0.0]),
+                np.array([-1.0, 0.0, 0.0]),
+                np.array([0.0, -1.0, 0.0])
+            ]
+            return edges
+
+        # Icosahedron: 5 triangles
+        elif n == 3 and count == 5:
+            # 5 edges in pentagonal cone
+            phi = (1 + np.sqrt(5)) / 2  # Golden ratio
+            # Elevation angle for icosahedron vertex
+            theta = np.arctan(2)  # ~63.43°
+            edges = []
+            for i in range(5):
+                angle = np.radians(i * 72)  # 360/5
+                edges.append(np.array([
+                    np.cos(theta) * np.cos(angle),
+                    np.cos(theta) * np.sin(angle),
+                    np.sin(theta)
+                ]))
+            return edges
+
+        # Cube: 3 squares
+        elif n == 4 and count == 3:
+            # Three perpendicular edges
+            edges = [
+                np.array([1.0, 0.0, 0.0]),
+                np.array([0.0, 1.0, 0.0]),
+                np.array([0.0, 0.0, 1.0])
+            ]
+            return edges
+
+        # Dodecahedron: 3 pentagons
+        elif n == 5 and count == 3:
+            # Three edges with dodecahedral angle
+            phi = (1 + np.sqrt(5)) / 2
+            # Normalize the three edge directions
+            edges = [
+                np.array([phi, 0.0, 1.0]),
+                np.array([1.0, phi, 0.0]),
+                np.array([0.0, 1.0, phi])
+            ]
+            edges = [e / np.linalg.norm(e) for e in edges]
+            return edges
+
+        # Fallback
+        else:
+            edges = []
+            for i in range(count):
+                angle = np.radians(i * 360 / count)
+                edges.append(np.array([np.cos(angle), np.sin(angle), 0.2]))
+            return edges
+
+    def _create_regular_polygon_between_edges(self, e1: np.ndarray, e2: np.ndarray, n: int) -> list:
+        """Create regular n-gon with origin as one vertex and e1, e2 as two edges"""
+        origin = np.array([0.0, 0.0, 0.0])
+
+        if n == 3:
+            # Equilateral triangle
+            return [origin, e1, e2]
+
+        elif n == 4:
+            # Square: fourth vertex at e1 + e2
+            return [origin, e1, e1 + e2, e2]
+
+        elif n == 5:
+            # Regular pentagon
+            # Calculate the other 2 vertices to make a regular pentagon
+            # Use the fact that in a regular pentagon from one vertex,
+            # the angle between consecutive sides is 108°
+
+            # Edge length
+            side_len = np.linalg.norm(e1)
+
+            # Create orthonormal basis in the plane of the polygon
+            u = e1 / np.linalg.norm(e1)
+
+            # Find perpendicular direction in plane containing origin, e1, e2
+            normal = np.cross(e1, e2)
+            if np.linalg.norm(normal) < 1e-10:
+                # Degenerate case
+                return [origin, e1, e2]
+            normal = normal / np.linalg.norm(normal)
+
+            # v is perpendicular to u in the plane
+            v = np.cross(normal, u)
+            v = v / np.linalg.norm(v)
+
+            # For regular pentagon with one vertex at origin:
+            # angles from first edge are 0°, 72°, 144°, 216°, 288°
+            # But we want vertices at 0, 108, 216, 324, which connects back
+            # Actually for a pentagon fan from origin: 0, 108, 216, 324
+
+            verts = [origin]
+            for i in range(5):
+                angle = np.radians(i * 72)  # Pentagon vertices at 72° intervals
+                pt = side_len * (np.cos(angle) * u + np.sin(angle) * v)
+                verts.append(pt)
+
+            # Return the 5 vertices (origin + 4 outer)
+            return verts[:5]
+
+        elif n == 6:
+            # Regular hexagon
+            side_len = np.linalg.norm(e1)
+            u = e1 / np.linalg.norm(e1)
+            normal = np.cross(e1, e2)
+            if np.linalg.norm(normal) < 1e-10:
+                return [origin, e1, e2]
+            normal = normal / np.linalg.norm(normal)
+            v = np.cross(normal, u)
+            v = v / np.linalg.norm(v)
+
+            verts = [origin]
+            for i in range(6):
+                angle = np.radians(i * 60)
+                pt = side_len * (np.cos(angle) * u + np.sin(angle) * v)
+                verts.append(pt)
+
+            return verts[:6]
+
+        else:
+            return [origin, e1, e2]
 
     def _create_vertex_3d(self, config: dict) -> list:
-        """Create 3D visualization of faces meeting at a vertex
-
-        Geometry: 'count' edges meet at origin, forming 'count' n-sided faces
-        """
-        n = config['n']  # Number of sides of polygon
-        count = config['count']  # Number of polygons meeting at vertex
+        """Create 3D visualization of faces meeting at a vertex"""
+        n = config['n']
+        count = config['count']
         valid = config.get('valid', True)
         planar = config.get('planar', False)
 
-        # Calculate interior angle
         interior_angle = (n - 2) * 180 / n
         total_angle = count * interior_angle
 
-        # Choose color based on validity
+        # Colors
         if valid:
-            color = 'rgba(46, 204, 113, 0.7)'  # Green
+            color = 'rgba(46, 204, 113, 0.7)'
             edge_color = 'rgb(39, 174, 96)'
         elif planar:
-            color = 'rgba(241, 196, 15, 0.7)'  # Yellow/Orange
+            color = 'rgba(241, 196, 15, 0.7)'
             edge_color = 'rgb(243, 156, 18)'
         else:
-            color = 'rgba(231, 76, 60, 0.7)'  # Red
+            color = 'rgba(231, 76, 60, 0.7)'
             edge_color = 'rgb(192, 57, 43)'
 
         traces = []
         origin = np.array([0.0, 0.0, 0.0])
 
-        # Step 1: Create 'count' edges emanating from origin
-        # These are arranged symmetrically in azimuth
-        edges = []
-        angular_spacing = 360.0 / count
+        # Get the actual Platonic solid edge directions
+        edges = self._get_platonic_solid_edges(n, count, planar)
 
-        # Elevation: how much edges tilt up from xy-plane
-        if planar or total_angle >= 360:
-            elevation = 0  # Flat
-        else:
-            deficit = 360 - total_angle
-            # More deficit = sharper vertex = higher elevation
-            elevation = min(60, deficit / count * 1.2)  # degrees, capped at 60°
-
-        for i in range(count):
-            azimuth = np.radians(i * angular_spacing)
-            elev = np.radians(elevation)
-
-            edge_end = np.array([
-                np.cos(elev) * np.cos(azimuth),
-                np.cos(elev) * np.sin(azimuth),
-                np.sin(elev)
-            ])
-            edges.append(edge_end)
-
-        # Step 2: Create polygon faces
-        # Each face connects 'count' edges in a specific pattern
-        # For triangles (n=3): face = [origin, edge_i, edge_i+1]
-        # For squares (n=4): face = [origin, edge_i, edge_i+edge_i+1, edge_i+1]
-        # For pentagons (n=5): more complex
-
+        # Create polygon faces between consecutive edges
         for i in range(count):
             e1 = edges[i]
             e2 = edges[(i + 1) % count]
 
-            if n == 3:
-                # Triangle: origin + 2 consecutive edges
-                verts = [origin.copy(), e1.copy(), e2.copy()]
-
-            elif n == 4:
-                # Square: origin + edge1 + (edge1+edge2) + edge2
-                # The "far corner" is the sum of the two edge vectors
-                far_corner = e1 + e2
-                verts = [origin.copy(), e1.copy(), far_corner.copy(), e2.copy()]
-
-            elif n == 5:
-                # Pentagon: origin + edge1 + 2 intermediate + edge2
-                # Create a regular pentagon in the plane defined by origin, e1, e2
-                # Define local coordinate system
-                v1 = e1 / np.linalg.norm(e1)  # unit vector along e1
-                # v2 in the plane, perpendicular to v1
-                temp = e2 - np.dot(e2, v1) * v1
-                v2 = temp / np.linalg.norm(temp) if np.linalg.norm(temp) > 1e-10 else np.array([0, 0, 1])
-
-                # Pentagon vertices in polar coordinates (centered at origin)
-                # Interior angle of pentagon = 108°
-                # At the origin, we want angle = 108° between adjacent sides
-                angle_at_origin = interior_angle
-                angular_step = angle_at_origin / (n - 1)  # Divide the angle
-
-                pentagon_verts = [origin.copy()]
-                for j in range(n):
-                    if j == 0:
-                        pentagon_verts.append(e1.copy())
-                    elif j == n - 1:
-                        pentagon_verts.append(e2.copy())
-                    else:
-                        # Intermediate vertex
-                        angle = j * angular_step
-                        # Rotate e1 by 'angle' in the plane
-                        cos_a = np.cos(np.radians(angle))
-                        sin_a = np.sin(np.radians(angle))
-                        # Also scale outward to form regular pentagon
-                        scale = 1.0 / np.cos(np.radians(angular_step / 2))
-                        pt = scale * (cos_a * v1 + sin_a * v2)
-                        pentagon_verts.append(pt)
-
-                verts = pentagon_verts[:-1]  # Remove duplicate of origin
-
-            elif n == 6:
-                # Hexagon: similar to pentagon
-                v1 = e1 / np.linalg.norm(e1)
-                temp = e2 - np.dot(e2, v1) * v1
-                v2 = temp / np.linalg.norm(temp) if np.linalg.norm(temp) > 1e-10 else np.array([0, 0, 1])
-
-                angle_at_origin = interior_angle
-                angular_step = angle_at_origin / (n - 1)
-
-                hexagon_verts = [origin.copy()]
-                for j in range(n):
-                    if j == 0:
-                        hexagon_verts.append(e1.copy())
-                    elif j == n - 1:
-                        hexagon_verts.append(e2.copy())
-                    else:
-                        angle = j * angular_step
-                        cos_a = np.cos(np.radians(angle))
-                        sin_a = np.sin(np.radians(angle))
-                        scale = 1.0 / np.cos(np.radians(angular_step / 2))
-                        pt = scale * (cos_a * v1 + sin_a * v2)
-                        hexagon_verts.append(pt)
-
-                verts = hexagon_verts[:-1]
-
-            else:
-                # Default: just triangle
-                verts = [origin.copy(), e1.copy(), e2.copy()]
+            # Use helper to create regular polygon face
+            verts = self._create_regular_polygon_between_edges(e1, e2, n)
 
             # Create mesh
             x_coords = [v[0] for v in verts]
