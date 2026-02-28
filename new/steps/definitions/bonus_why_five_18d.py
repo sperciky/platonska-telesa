@@ -628,38 +628,56 @@ Tato 3D vizualizace ukazuje:
 
         elif n == 5:
             # Pentagon with origin as one vertex
-            # Vertices: origin, e1, v2, v3, e2 (where v2, v3 are intermediate)
+            # For a regular pentagon: exterior angle = 360°/5 = 72°
+            # We walk around the pentagon starting from origin
 
             # Create orthonormal basis in the face plane
+            # e1 points to first vertex, e2 should point to last vertex
             u = e1 / np.linalg.norm(e1)
             normal = np.cross(e1, e2)
             if np.linalg.norm(normal) < 1e-10:
+                # Degenerate case: e1 and e2 are parallel
                 return [origin, e1, e2]
             normal = normal / np.linalg.norm(normal)
             v = np.cross(normal, u)
             v = v / np.linalg.norm(v)
 
-            # For a regular pentagon with one vertex at origin,
-            # interior angle at origin = 108°
-            # We need 5 vertices: origin, e1, v2, v3, e2
-            # Angles from e1: 0°, 108°, 216°, 324° (back to near origin)
+            # Build pentagon vertices by walking around the perimeter
+            # Start at origin, first edge goes to v1 (= e1)
             verts = [origin]
 
-            # v1 = e1 (angle 0°)
-            verts.append(e1)
+            # v1 = e1
+            current_pos = e1
+            verts.append(current_pos.copy())
 
-            # v2 at 108° from e1
-            angle2 = np.radians(108)
-            v2 = edge_len * (np.cos(angle2) * u + np.sin(angle2) * v)
-            verts.append(v2)
+            # Direction of first edge (from origin to v1)
+            current_dir = u.copy()
 
-            # v3 at 216° from e1
-            angle3 = np.radians(216)
-            v3 = edge_len * (np.cos(angle3) * u + np.sin(angle3) * v)
-            verts.append(v3)
+            # Exterior angle for regular pentagon = 72°
+            exterior_angle = np.radians(72)
 
-            # v4 = e2 (should be at ~288° from e1 for regular pentagon)
-            verts.append(e2)
+            # Walk to v2, v3, v4
+            for i in range(3):
+                # Rotate direction by exterior angle (turn left)
+                # Rotation in the plane spanned by u, v
+                cos_a = np.cos(exterior_angle)
+                sin_a = np.sin(exterior_angle)
+
+                # Project current_dir onto u, v basis
+                dir_u = np.dot(current_dir, u)
+                dir_v = np.dot(current_dir, v)
+
+                # Rotate by exterior angle
+                new_dir_u = dir_u * cos_a - dir_v * sin_a
+                new_dir_v = dir_u * sin_a + dir_v * cos_a
+
+                # Reconstruct direction vector
+                current_dir = new_dir_u * u + new_dir_v * v
+                current_dir = current_dir / np.linalg.norm(current_dir)
+
+                # Move by edge_len in new direction
+                current_pos = current_pos + edge_len * current_dir
+                verts.append(current_pos.copy())
 
             return verts
 
