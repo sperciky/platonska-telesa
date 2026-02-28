@@ -409,16 +409,18 @@ Tato 3D vizualizace ukazuje:
                         face_color = 'rgba(241, 196, 15, 0.6)'  # Yellow/orange
                         face_edge_color = 'rgb(243, 156, 18)'
                         face_opacity = 0.6
+                        z_offset = 0.0  # Keep in plane
                     else:
                         # Overlapping faces: bright red with high transparency
-                        face_color = 'rgba(231, 76, 60, 0.4)'  # Red, more transparent
+                        face_color = 'rgba(231, 76, 60, 0.7)'  # Red, slightly more opaque
                         face_edge_color = 'rgb(192, 57, 43)'
-                        face_opacity = 0.4
+                        face_opacity = 0.7
+                        z_offset = 0.05  # Lift above plane to make visible!
 
-                    # Create mesh
+                    # Create mesh with z-offset for overlapping faces
                     x_coords = [v[0] for v in verts]
                     y_coords = [v[1] for v in verts]
-                    z_coords = [v[2] for v in verts]
+                    z_coords = [v[2] + z_offset for v in verts]  # Add z_offset!
 
                     # Triangulate from origin
                     i_indices, j_indices, k_indices = [], [], []
@@ -433,12 +435,12 @@ Tato 3D vizualizace ukazuje:
                         color=face_color, opacity=face_opacity, flatshading=False, hoverinfo='skip'
                     ))
 
-                    # Edges
+                    # Edges (with same z_offset as face)
                     for vtx_idx in range(len(verts)):
                         v1, v2 = verts[vtx_idx], verts[(vtx_idx + 1) % len(verts)]
                         traces.append(go.Scatter3d(
-                            x=[v1[0], v2[0]], y=[v1[1], v2[1]], z=[v1[2], v2[2]],
-                            mode='lines', line=dict(color=face_edge_color, width=3),
+                            x=[v1[0], v2[0]], y=[v1[1], v2[1]], z=[v1[2] + z_offset, v2[2] + z_offset],
+                            mode='lines', line=dict(color=face_edge_color, width=4),
                             hoverinfo='skip', showlegend=False
                         ))
 
