@@ -16,6 +16,10 @@ Spuštění / Usage:
 
     Volitelné argumenty / Optional arguments:
     python generate_animations.py --frames 36 --fps 12 --size 600
+    python generate_animations.py --steps 5              # pouze krok 5 / only step 5
+    python generate_animations.py --steps 1-5            # kroky 1-5 / steps 1-5
+    python generate_animations.py --steps 1,3,5          # kroky 1,3,5 / steps 1,3,5
+    python generate_animations.py --steps 1-3,7,10-12    # kombinace / combination
 """
 
 import sys
@@ -226,6 +230,36 @@ ALL_STEPS = [
 ]
 
 
+def parse_steps_arg(steps_str: str) -> set:
+    """
+    Parse step specification into a set of step numbers.
+
+    Accepts:
+      - Single number:     "5"           → {5}
+      - Range:             "1-5"         → {1, 2, 3, 4, 5}
+      - Comma-separated:   "1,3,5"       → {1, 3, 5}
+      - Combination:       "1-3,7,10-12" → {1, 2, 3, 7, 10, 11, 12}
+
+    Returns:
+        Set of step numbers (integers).
+    """
+    result = set()
+    parts = steps_str.split(',')
+
+    for part in parts:
+        part = part.strip()
+        if '-' in part:
+            # Range: "5-10"
+            start_str, end_str = part.split('-', 1)
+            start, end = int(start_str.strip()), int(end_str.strip())
+            result.update(range(start, end + 1))
+        else:
+            # Single number: "5"
+            result.add(int(part))
+
+    return result
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='Generate rotating GIF animations for the Platonic solids tutorial.'
@@ -240,20 +274,45 @@ def main():
                         help='Camera elevation angle in degrees (default: 25)')
     parser.add_argument('--outdir',    type=str,   default='animations',
                         help='Output folder (default: animations/)')
+    parser.add_argument('--steps',     type=str,   default=None,
+                        help='Specific step(s) to generate (e.g., "5", "1-5", "1,3,5", "1-3,7-9")')
     args = parser.parse_args()
 
     output_dir = _HERE / args.outdir
     output_dir.mkdir(exist_ok=True)
 
+    # Filter steps if --steps is specified
+    if args.steps:
+        try:
+            step_numbers = parse_steps_arg(args.steps)
+        except ValueError as e:
+            print(f"Error parsing --steps argument: {e}")
+            sys.exit(1)
+
+        steps_to_generate = [s for s in ALL_STEPS if s.get_metadata().number in step_numbers]
+
+        if not steps_to_generate:
+            available = sorted(s.get_metadata().number for s in ALL_STEPS)
+            print(f"No steps found matching: {args.steps}")
+            print(f"Available steps: {available}")
+            sys.exit(1)
+
+        step_nums_str = ', '.join(str(n) for n in sorted(step_numbers))
+        filter_info = f"  filtering: steps {step_nums_str}"
+    else:
+        steps_to_generate = ALL_STEPS
+        filter_info = f"  generating: all {len(ALL_STEPS)} steps"
+
     print(f"\n{'='*60}")
     print(f"  Platonic Solids – GIF Animation Generator")
     print(f"  frames={args.frames}  fps={args.fps}  size={args.size}px")
+    print(filter_info)
     print(f"  output → {output_dir}")
     print(f"{'='*60}\n")
 
     succeeded, failed = [], []
 
-    for step in ALL_STEPS:
+    for step in steps_to_generate:
         meta  = step.get_metadata()
         label = f"[{meta.number:>2}] {meta.title}"
         safe  = f"step_{meta.number:02d}_{_ascii_filename(meta.category)}"
