@@ -82,11 +82,19 @@ Tato 3D vizualizace ukazuje:
                 fig.add_trace(trace, row=row, col=col)
 
             scene_name = 'scene' if idx == 0 else f'scene{idx + 1}'
+
+            # Use larger range for hexagons and pentagons to avoid clipping
+            n = config['n']
+            if n >= 5:  # Pentagons and hexagons need more space
+                axis_range = [-2.5, 2.5]
+            else:  # Triangles and squares fit in smaller range
+                axis_range = [-1.5, 1.5]
+
             fig.update_layout(**{
                 scene_name: dict(
-                    xaxis=dict(range=[-1.5, 1.5], showticklabels=False, title=''),
-                    yaxis=dict(range=[-1.5, 1.5], showticklabels=False, title=''),
-                    zaxis=dict(range=[-1.5, 1.5], showticklabels=False, title=''),
+                    xaxis=dict(range=axis_range, showticklabels=False, title=''),
+                    yaxis=dict(range=axis_range, showticklabels=False, title=''),
+                    zaxis=dict(range=axis_range, showticklabels=False, title=''),
                     aspectmode='cube',
                     aspectratio=dict(x=1, y=1, z=1),  # Force equal proportions
                     camera=dict(eye=dict(x=1.3, y=1.3, z=1.2), up=dict(x=0, y=0, z=1)),
