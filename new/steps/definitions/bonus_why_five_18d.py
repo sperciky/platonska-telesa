@@ -61,13 +61,14 @@ Tato 3D vizualizace ukazuje:
             {"n": 5, "count": 4, "name": "4 pětiúhelníky", "solid": "Nemožné!", "valid": False, "planar": False},
         ]
 
-        rows, cols = 2, 5
+        # Use 5 rows x 2 columns for more square-like spaces
+        rows, cols = 5, 2
         fig = make_subplots(
             rows=rows, cols=cols,
             specs=[[{'type': 'scene'}] * cols] * rows,
             subplot_titles=[f"{c['name']}<br>{c['solid']}" for c in configs],
-            vertical_spacing=0.05,
-            horizontal_spacing=0.02
+            vertical_spacing=0.08,
+            horizontal_spacing=0.08
         )
 
         for idx, config in enumerate(configs):
@@ -81,8 +82,9 @@ Tato 3D vizualizace ukazuje:
                 scene_name: dict(
                     xaxis=dict(range=[-1.5, 1.5], showticklabels=False, title=''),
                     yaxis=dict(range=[-1.5, 1.5], showticklabels=False, title=''),
-                    zaxis=dict(range=[-0.5, 1.5], showticklabels=False, title=''),
+                    zaxis=dict(range=[-1.5, 1.5], showticklabels=False, title=''),
                     aspectmode='cube',
+                    aspectratio=dict(x=1, y=1, z=1),  # Force equal proportions
                     camera=dict(eye=dict(x=1.3, y=1.3, z=1.2), up=dict(x=0, y=0, z=1)),
                     bgcolor='white'
                 )
@@ -90,9 +92,9 @@ Tato 3D vizualizace ukazuje:
 
         fig.update_layout(
             title=dict(text="3D Vizualizace: Jak se stěny potkávají ve vrcholu",
-                      font=dict(size=24, color='#2c3e50'), x=0.5, xanchor='center'),
-            showlegend=False, height=800,
-            margin=dict(t=120, l=10, r=10, b=10), paper_bgcolor='#f8f9fa'
+                      font=dict(size=20, color='#2c3e50'), x=0.5, xanchor='center'),
+            showlegend=False, height=1800,  # Taller for 5 rows
+            margin=dict(t=80, l=10, r=10, b=10), paper_bgcolor='#f8f9fa'
         )
         return fig
 
@@ -113,7 +115,7 @@ Tato 3D vizualizace ukazuje:
 
         # 3D cases with equal edge lengths
         if n == 3:  # Triangles
-            # For equilateral triangles: edges at 120° azimuth, specific elevation
+            # For equilateral triangles: edges at specific elevation
             # cos(elev) = 1/√3 for equilateral faces
             elev = np.arccos(1.0 / np.sqrt(3))  # ≈ 54.74°
             for i in range(count):
@@ -135,21 +137,19 @@ Tato 3D vizualizace ukazuje:
                 ]
                 return edges
             else:
-                # Planar fallback
                 for i in range(count):
                     angle = np.radians(i * 360 / count)
                     edges.append(edge_length * np.array([np.cos(angle), np.sin(angle), 0.0]))
                 return edges
 
         elif n == 5:  # Pentagons
-            # For dodecahedron: 3 edges arranged specifically
+            # For dodecahedron: 3 edges arranged at correct angle
             if count == 3:
                 phi = (1 + np.sqrt(5)) / 2
-                # Three edges with correct angles for dodecahedron
+                # Three edges with dodecahedral geometry
                 e1 = np.array([1.0, 0.0, phi])
                 e2 = np.array([0.0, phi, 1.0])
                 e3 = np.array([phi, 1.0, 0.0])
-                # Normalize to edge_length
                 edges = [edge_length * e / np.linalg.norm(e) for e in [e1, e2, e3]]
                 return edges
             else:
@@ -159,7 +159,6 @@ Tato 3D vizualizace ukazuje:
                 return edges
 
         elif n == 6:  # Hexagons
-            # Planar
             for i in range(count):
                 angle = np.radians(i * 360 / count)
                 edges.append(edge_length * np.array([np.cos(angle), np.sin(angle), 0.0]))
@@ -172,8 +171,9 @@ Tato 3D vizualizace ukazuje:
         return edges
 
     def _create_face(self, e1: np.ndarray, e2: np.ndarray, n: int) -> List[np.ndarray]:
-        """Create a face with n vertices starting from origin with edges e1, e2"""
+        """Create a face with n vertices: origin + (n-1) outer vertices"""
         origin = np.array([0.0, 0.0, 0.0])
+        edge_len = np.linalg.norm(e1)
 
         if n == 3:
             # Triangle: origin + 2 edges
@@ -184,8 +184,10 @@ Tato 3D vizualizace ukazuje:
             return [origin, e1, e1 + e2, e2]
 
         elif n == 5:
-            # Pentagon: construct remaining vertices
-            # Using the plane defined by origin, e1, e2
+            # Pentagon with origin as one vertex
+            # Vertices: origin, e1, v2, v3, e2 (where v2, v3 are intermediate)
+            
+            # Create orthonormal basis in the face plane
             u = e1 / np.linalg.norm(e1)
             normal = np.cross(e1, e2)
             if np.linalg.norm(normal) < 1e-10:
@@ -194,17 +196,32 @@ Tato 3D vizualizace ukazuje:
             v = np.cross(normal, u)
             v = v / np.linalg.norm(v)
 
-            # Pentagon: vertices at 0°, 108°, 216°, 324° from e1
-            edge_len = np.linalg.norm(e1)
+            # For a regular pentagon with one vertex at origin,
+            # interior angle at origin = 108°
+            # We need 5 vertices: origin, e1, v2, v3, e2
+            # Angles from e1: 0°, 108°, 216°, 324° (back to near origin)
             verts = [origin]
-            for i in range(5):
-                angle = np.radians(i * 72)  # 72° = 360°/5
-                pt = edge_len * (np.cos(angle) * u + np.sin(angle) * v)
-                verts.append(pt)
-            return verts[:5]  # Return 5 vertices
+            
+            # v1 = e1 (angle 0°)
+            verts.append(e1)
+            
+            # v2 at 108° from e1
+            angle2 = np.radians(108)
+            v2 = edge_len * (np.cos(angle2) * u + np.sin(angle2) * v)
+            verts.append(v2)
+            
+            # v3 at 216° from e1  
+            angle3 = np.radians(216)
+            v3 = edge_len * (np.cos(angle3) * u + np.sin(angle3) * v)
+            verts.append(v3)
+            
+            # v4 = e2 (should be at ~288° from e1 for regular pentagon)
+            verts.append(e2)
+            
+            return verts
 
         elif n == 6:
-            # Hexagon
+            # Hexagon with origin as one vertex
             u = e1 / np.linalg.norm(e1)
             normal = np.cross(e1, e2)
             if np.linalg.norm(normal) < 1e-10:
@@ -213,13 +230,16 @@ Tato 3D vizualizace ukazuje:
             v = np.cross(normal, u)
             v = v / np.linalg.norm(v)
 
-            edge_len = np.linalg.norm(e1)
-            verts = [origin]
-            for i in range(6):
-                angle = np.radians(i * 60)
+            # Hexagon interior angle = 120°
+            verts = [origin, e1]
+            
+            for i in range(1, 5):
+                angle = np.radians(i * 120)
                 pt = edge_len * (np.cos(angle) * u + np.sin(angle) * v)
                 verts.append(pt)
-            return verts[:6]
+            
+            verts.append(e2)
+            return verts
 
         return [origin, e1, e2]
 
@@ -261,7 +281,7 @@ Tato 3D vizualizace ukazuje:
             y_coords = [v[1] for v in verts]
             z_coords = [v[2] for v in verts]
 
-            # Triangulate
+            # Triangulate from origin
             i_indices, j_indices, k_indices = [], [], []
             for vtx_idx in range(1, len(verts) - 1):
                 i_indices.append(0)
