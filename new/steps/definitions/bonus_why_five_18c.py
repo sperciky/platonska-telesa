@@ -35,6 +35,18 @@ Tento diagram ukazuje logickou cestu důkazu:
 Výsledek je **kompletní a vyčerpávající důkaz**!
 """
 
+    def render_diagram(self, fig, ax) -> None:
+        """Vykreslení (matplotlib - legacy, pouze placeholder)"""
+        from matplotlib.figure import Figure
+        self.setup_axes(ax)
+        ax.set_title(self.get_metadata().title, fontsize=14, fontweight='bold')
+        ax.text(0, 0, 'Viz interaktivní Plotly diagram →',
+                fontsize=16, ha='center', va='center',
+                bbox=dict(boxstyle='round', facecolor='lightyellow', alpha=0.5))
+        ax.set_xlim(-1, 1)
+        ax.set_ylim(-1, 1)
+        ax.axis('off')
+
     def render_plotly_diagram(self) -> go.Figure:
         """Create vertical flow diagram showing the proof logic"""
 
