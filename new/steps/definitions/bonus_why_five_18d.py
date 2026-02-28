@@ -397,9 +397,17 @@ Tato 3D vizualizace ukazuje:
                 excess_angle = total_angle - 360
 
                 # Create faces between consecutive edges
+                edge_length = 1.0
                 for i in range(count):
                     e1 = edges[i]
-                    e2 = edges[(i + 1) % count]
+
+                    # For overlapping faces, calculate next edge beyond 360° instead of wrapping
+                    if i >= max_faces_fit:
+                        # Calculate edge at (i+1) * interior_angle degrees (beyond 360°)
+                        next_angle = np.radians((i + 1) * interior_angle)
+                        e2 = edge_length * np.array([np.cos(next_angle), np.sin(next_angle), 0.0])
+                    else:
+                        e2 = edges[(i + 1) % count]
 
                     verts = self._create_face(e1, e2, n)
 
