@@ -40,6 +40,7 @@ from steps.definitions.bonus_why_five import BonusStep_WhyOnlyFive
 from steps.definitions.bonus_why_five_18a import BonusStep_WhyFive_18A
 from steps.definitions.bonus_why_five_18b import BonusStep_WhyFive_18B
 from steps.definitions.bonus_why_five_18c import BonusStep_WhyFive_18C
+from steps.definitions.bonus_why_five_18d import BonusStep_WhyFive_18D
 
 
 def register_all_steps():
@@ -81,6 +82,7 @@ def register_all_steps():
     registry.register(BonusStep_WhyFive_18A())
     registry.register(BonusStep_WhyFive_18B())
     registry.register(BonusStep_WhyFive_18C())
+    registry.register(BonusStep_WhyFive_18D())
 
 
 def initialize_session_state():
