@@ -390,39 +390,152 @@ Tato 3D vizualizace ukazuje:
             # Original logic for other shapes
             edges = self._get_edges_from_origin(n, count, planar)
 
-            # Create faces between consecutive edges
-            for i in range(count):
-                e1 = edges[i]
-                e2 = edges[(i + 1) % count]
+            # For impossible configurations (total_angle > 360), show overlapping faces
+            if not valid and not planar and total_angle > 360:
+                # Calculate how many faces fit without exceeding 360°
+                max_faces_fit = int(360 / interior_angle)
+                excess_angle = total_angle - 360
 
-                verts = self._create_face(e1, e2, n)
+                # Create faces between consecutive edges
+                for i in range(count):
+                    e1 = edges[i]
+                    e2 = edges[(i + 1) % count]
 
-                # Create mesh
-                x_coords = [v[0] for v in verts]
-                y_coords = [v[1] for v in verts]
-                z_coords = [v[2] for v in verts]
+                    verts = self._create_face(e1, e2, n)
 
-                # Triangulate from origin
-                i_indices, j_indices, k_indices = [], [], []
-                for vtx_idx in range(1, len(verts) - 1):
-                    i_indices.append(0)
-                    j_indices.append(vtx_idx)
-                    k_indices.append(vtx_idx + 1)
+                    # Determine color and opacity based on whether this face fits
+                    if i < max_faces_fit:
+                        # Faces that fit: normal color with transparency
+                        face_color = 'rgba(241, 196, 15, 0.6)'  # Yellow/orange
+                        face_edge_color = 'rgb(243, 156, 18)'
+                        face_opacity = 0.6
+                    else:
+                        # Overlapping faces: bright red with high transparency
+                        face_color = 'rgba(231, 76, 60, 0.4)'  # Red, more transparent
+                        face_edge_color = 'rgb(192, 57, 43)'
+                        face_opacity = 0.4
 
-                traces.append(go.Mesh3d(
-                    x=x_coords, y=y_coords, z=z_coords,
-                    i=i_indices, j=j_indices, k=k_indices,
-                    color=color, opacity=0.75, flatshading=False, hoverinfo='skip'
+                    # Create mesh
+                    x_coords = [v[0] for v in verts]
+                    y_coords = [v[1] for v in verts]
+                    z_coords = [v[2] for v in verts]
+
+                    # Triangulate from origin
+                    i_indices, j_indices, k_indices = [], [], []
+                    for vtx_idx in range(1, len(verts) - 1):
+                        i_indices.append(0)
+                        j_indices.append(vtx_idx)
+                        k_indices.append(vtx_idx + 1)
+
+                    traces.append(go.Mesh3d(
+                        x=x_coords, y=y_coords, z=z_coords,
+                        i=i_indices, j=j_indices, k=k_indices,
+                        color=face_color, opacity=face_opacity, flatshading=False, hoverinfo='skip'
+                    ))
+
+                    # Edges
+                    for vtx_idx in range(len(verts)):
+                        v1, v2 = verts[vtx_idx], verts[(vtx_idx + 1) % len(verts)]
+                        traces.append(go.Scatter3d(
+                            x=[v1[0], v2[0]], y=[v1[1], v2[1]], z=[v1[2], v2[2]],
+                            mode='lines', line=dict(color=face_edge_color, width=3),
+                            hoverinfo='skip', showlegend=False
+                        ))
+
+                # Add annotation showing total angle and excess
+                # Position text above the configuration
+                traces.append(go.Scatter3d(
+                    x=[0], y=[0], z=[1.8],
+                    mode='text',
+                    text=f'{count}×{interior_angle:.0f}° = {total_angle:.0f}°',
+                    textfont=dict(size=14, color='red', family='Arial Black'),
+                    hoverinfo='skip', showlegend=False
                 ))
 
-                # Edges
-                for vtx_idx in range(len(verts)):
-                    v1, v2 = verts[vtx_idx], verts[(vtx_idx + 1) % len(verts)]
+                traces.append(go.Scatter3d(
+                    x=[0], y=[0], z=[1.5],
+                    mode='text',
+                    text=f'Přebytek: {excess_angle:.0f}°',
+                    textfont=dict(size=12, color='darkred'),
+                    hoverinfo='skip', showlegend=False
+                ))
+
+                # Add circular diagram showing angular excess
+                # Draw a circle representing 360° and show the excess
+                circle_radius = 0.4
+                circle_z = -1.2
+
+                # Draw 360° circle (green arc)
+                theta_360 = np.linspace(0, 2 * np.pi, 100)
+                circle_x = circle_radius * np.cos(theta_360)
+                circle_y = circle_radius * np.sin(theta_360)
+                circle_z_arr = np.full_like(theta_360, circle_z)
+
+                traces.append(go.Scatter3d(
+                    x=circle_x, y=circle_y, z=circle_z_arr,
+                    mode='lines',
+                    line=dict(color='green', width=4),
+                    hoverinfo='skip', showlegend=False
+                ))
+
+                # Draw excess arc (red arc extending beyond 360°)
+                if excess_angle > 0:
+                    excess_radians = np.radians(excess_angle)
+                    theta_excess = np.linspace(0, excess_radians, 50)
+                    excess_x = circle_radius * np.cos(theta_excess)
+                    excess_y = circle_radius * np.sin(theta_excess)
+                    excess_z = np.full_like(theta_excess, circle_z)
+
                     traces.append(go.Scatter3d(
-                        x=[v1[0], v2[0]], y=[v1[1], v2[1]], z=[v1[2], v2[2]],
-                        mode='lines', line=dict(color=edge_color, width=4),
+                        x=excess_x, y=excess_y, z=excess_z,
+                        mode='lines',
+                        line=dict(color='red', width=6),
                         hoverinfo='skip', showlegend=False
                     ))
+
+                # Label for diagram
+                traces.append(go.Scatter3d(
+                    x=[0], y=[0], z=[circle_z - 0.3],
+                    mode='text',
+                    text='360°',
+                    textfont=dict(size=10, color='green'),
+                    hoverinfo='skip', showlegend=False
+                ))
+
+            else:
+                # Normal rendering for valid and planar configurations
+                for i in range(count):
+                    e1 = edges[i]
+                    e2 = edges[(i + 1) % count]
+
+                    verts = self._create_face(e1, e2, n)
+
+                    # Create mesh
+                    x_coords = [v[0] for v in verts]
+                    y_coords = [v[1] for v in verts]
+                    z_coords = [v[2] for v in verts]
+
+                    # Triangulate from origin
+                    i_indices, j_indices, k_indices = [], [], []
+                    for vtx_idx in range(1, len(verts) - 1):
+                        i_indices.append(0)
+                        j_indices.append(vtx_idx)
+                        k_indices.append(vtx_idx + 1)
+
+                    traces.append(go.Mesh3d(
+                        x=x_coords, y=y_coords, z=z_coords,
+                        i=i_indices, j=j_indices, k=k_indices,
+                        color=color, opacity=0.75, flatshading=False, hoverinfo='skip'
+                    ))
+
+                    # Edges
+                    for vtx_idx in range(len(verts)):
+                        v1, v2 = verts[vtx_idx], verts[(vtx_idx + 1) % len(verts)]
+                        traces.append(go.Scatter3d(
+                            x=[v1[0], v2[0]], y=[v1[1], v2[1]], z=[v1[2], v2[2]],
+                            mode='lines', line=dict(color=edge_color, width=4),
+                            hoverinfo='skip', showlegend=False
+                        ))
 
         # Central vertex
         traces.append(go.Scatter3d(
