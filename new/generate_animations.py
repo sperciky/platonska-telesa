@@ -8,7 +8,10 @@ Uložení / Output:
     Files are saved to the new/animations/ folder.
 
 Instalace závislostí / Install dependencies:
-    pip install kaleido imageio Pillow
+    pip install kaleido Pillow tqdm
+
+    nebo / or:
+    pip install -r requirements_animation.txt
 
 Spuštění / Usage:
     cd new/
@@ -29,6 +32,13 @@ import io
 import argparse
 from pathlib import Path
 from unittest.mock import MagicMock
+
+try:
+    from tqdm import tqdm
+    HAS_TQDM = True
+except ImportError:
+    HAS_TQDM = False
+    tqdm = None
 
 # ── 1. Mock streamlit BEFORE any step imports ─────────────────────────────────
 # Step modules call st.session_state inside render_plotly_diagram(), so we
@@ -150,7 +160,14 @@ def save_rotating_gif(fig, output_path: Path, n_frames: int, fps: int,
     output_path.parent.mkdir(parents=True, exist_ok=True)
     frames = []
 
-    for i in range(n_frames):
+    # Progress bar setup
+    if HAS_TQDM:
+        iterator = tqdm(range(n_frames), desc="  Rendering", unit="frame", ncols=70)
+    else:
+        iterator = range(n_frames)
+        print(f"  Rendering {n_frames} frames...")
+
+    for i in iterator:
         azimuth = i * 360.0 / n_frames
         fig.update_layout(
             scene_camera=dict(
@@ -165,9 +182,11 @@ def save_rotating_gif(fig, output_path: Path, n_frames: int, fps: int,
         img_p = img.convert('P', palette=Image.ADAPTIVE, colors=128)
         frames.append(img_p)
 
-        print(f"    frame {i + 1:>3}/{n_frames}", end='\r', flush=True)
+        if not HAS_TQDM:
+            print(f"    frame {i + 1:>3}/{n_frames}", end='\r', flush=True)
 
-    print()  # newline
+    if not HAS_TQDM:
+        print()  # newline
 
     duration_ms = max(1, round(1000 / fps))
     frames[0].save(
@@ -193,6 +212,7 @@ def save_static_gif(fig, output_path: Path, size_w: int, size_h: int) -> None:
     from PIL import Image
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    print(f"  Rendering static image ({size_w}x{size_h}px)...")
 
     png_bytes = fig.to_image(format='png', width=size_w, height=size_h, scale=1)
     img = Image.open(io.BytesIO(png_bytes)).convert('RGBA').convert('P', palette=Image.ADAPTIVE, colors=128)
