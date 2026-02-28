@@ -559,9 +559,10 @@ Tato 3D vizualizace ukazuje:
         edges = []
 
         if planar or total_angle >= 360:
-            # Planar: edges in xy-plane
+            # Planar or impossible: edges in xy-plane
+            # Use ACTUAL interior angles, not equal division
             for i in range(count):
-                angle = np.radians(i * 360 / count)
+                angle = np.radians(i * interior_angle)  # Use interior angle spacing!
                 edges.append(edge_length * np.array([np.cos(angle), np.sin(angle), 0.0]))
             return edges
 
