@@ -34,6 +34,18 @@ Pro každý pravidelný mnohoúhelník zjistíme:
 Výsledek: **Pouze 5 validních kombinací = 5 Platónských těles!**
 """
 
+    def render_diagram(self, fig, ax) -> None:
+        """Vykreslení (matplotlib - legacy, pouze placeholder)"""
+        from matplotlib.figure import Figure
+        self.setup_axes(ax)
+        ax.set_title(self.get_metadata().title, fontsize=14, fontweight='bold')
+        ax.text(0, 0, 'Viz interaktivní Plotly tabulka →',
+                fontsize=16, ha='center', va='center',
+                bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.5))
+        ax.set_xlim(-1, 1)
+        ax.set_ylim(-1, 1)
+        ax.axis('off')
+
     def render_plotly_diagram(self) -> go.Figure:
         """Create comprehensive table showing all polygon-count combinations"""
 
