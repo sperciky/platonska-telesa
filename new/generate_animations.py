@@ -94,6 +94,9 @@ from steps.definitions.duality_icosahedron_dodecahedron import DualityIcosahedro
 from steps.definitions.duality_tetrahedron_self    import DualityTetrahedronSelf
 from steps.definitions.bonus          import BonusStep_TriangleCenter
 from steps.definitions.bonus_why_five import BonusStep_WhyOnlyFive
+from steps.definitions.bonus_why_five_18a import BonusStep_WhyFive_18A
+from steps.definitions.bonus_why_five_18b import BonusStep_WhyFive_18B
+from steps.definitions.bonus_why_five_18c import BonusStep_WhyFive_18C
 
 # ── 4. Helpers ────────────────────────────────────────────────────────────────
 
@@ -247,6 +250,9 @@ ALL_STEPS = [
     DualityTetrahedronSelf(),
     BonusStep_TriangleCenter(),
     BonusStep_WhyOnlyFive(),
+    BonusStep_WhyFive_18A(),
+    BonusStep_WhyFive_18B(),
+    BonusStep_WhyFive_18C(),
 ]
 
 
