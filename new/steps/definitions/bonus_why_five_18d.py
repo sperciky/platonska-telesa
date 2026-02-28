@@ -2,7 +2,7 @@
 Step 21 (18d): Důkaz pomocí úhlů - 3D vizualizace vrcholu
 Bonus step showing 3D visualization of faces meeting at a vertex
 """
-from typing import Dict, Any
+from typing import List
 import numpy as np
 import plotly.graph_objects as go
 from matplotlib.figure import Figure
@@ -30,7 +30,7 @@ class BonusStep_WhyFive_18D(Step):
 Tato 3D vizualizace ukazuje:
 - **Zelená:** Validní konfigurace (<360°) → stěny tvoří 3D "kužel"
 - **Žlutá/Oranžová:** Rovinná konfigurace (=360°) → stěny leží v rovině
-- **Červená:** Nemožná konfigurace (>360°) → stěny by se musely překrývat
+- **Červená:** Nemožná konfigurace (>360°) → stěny se překrývají!
 
 Klíčové poznatky:
 1. **3 trojúhelníky** (180°) → tvoří "ostrou" špičku tetraedru
@@ -53,6 +53,7 @@ Klíčové poznatky:
 
     def render_plotly_diagram(self) -> go.Figure:
         """Vykreslení 3D vizualizace vrcholů (Plotly - interaktivní)"""
+        from plotly.subplots import make_subplots
 
         # Configuration for different vertex arrangements
         configs = [
@@ -72,9 +73,6 @@ Klíčové poznatky:
             {"n": 3, "count": 7, "name": "7 trojúhelníků", "solid": "Nemožné!", "valid": False, "planar": False},
             {"n": 5, "count": 4, "name": "4 pětiúhelníky", "solid": "Nemožné!", "valid": False, "planar": False},
         ]
-
-        # Create subplots in a grid
-        from plotly.subplots import make_subplots
 
         rows = 2
         cols = 5
@@ -128,163 +126,87 @@ Klíčové poznatky:
 
         return fig
 
-    def _get_platonic_solid_edges(self, n: int, count: int, planar: bool) -> list:
-        """Get the actual edge directions for each Platonic solid configuration"""
-
-        if planar or count * ((n - 2) * 180 / n) >= 360:
-            # Planar: edges in xy-plane
-            edges = []
-            for i in range(count):
-                angle = np.radians(i * 360 / count)
-                edges.append(np.array([np.cos(angle), np.sin(angle), 0.0]))
-            return edges
-
-        # Valid 3D configurations - use actual Platonic solid geometry
-
-        # Tetrahedron: 3 triangles
-        if n == 3 and count == 3:
-            # Tetrahedral angle: edges at ~109.47° to each other
-            # Place first edge along x-axis, arrange others symmetrically
-            sqrt2 = np.sqrt(2)
-            sqrt6 = np.sqrt(6)
-            edges = [
-                np.array([1.0, 0.0, 0.0]),
-                np.array([-1/3, 2*sqrt2/3, 0.0]),
-                np.array([-1/3, -sqrt2/3, sqrt6/3])
-            ]
-            return edges
-
-        # Octahedron: 4 triangles
-        elif n == 3 and count == 4:
-            # Square pyramid: edges at 90° in xy-plane
-            edges = [
-                np.array([1.0, 0.0, 0.0]),
-                np.array([0.0, 1.0, 0.0]),
-                np.array([-1.0, 0.0, 0.0]),
-                np.array([0.0, -1.0, 0.0])
-            ]
-            return edges
-
-        # Icosahedron: 5 triangles
-        elif n == 3 and count == 5:
-            # 5 edges in pentagonal cone
-            phi = (1 + np.sqrt(5)) / 2  # Golden ratio
-            # Elevation angle for icosahedron vertex
-            theta = np.arctan(2)  # ~63.43°
-            edges = []
-            for i in range(5):
-                angle = np.radians(i * 72)  # 360/5
-                edges.append(np.array([
-                    np.cos(theta) * np.cos(angle),
-                    np.cos(theta) * np.sin(angle),
-                    np.sin(theta)
-                ]))
-            return edges
-
-        # Cube: 3 squares
-        elif n == 4 and count == 3:
-            # Three perpendicular edges
-            edges = [
-                np.array([1.0, 0.0, 0.0]),
-                np.array([0.0, 1.0, 0.0]),
-                np.array([0.0, 0.0, 1.0])
-            ]
-            return edges
-
-        # Dodecahedron: 3 pentagons
-        elif n == 5 and count == 3:
-            # Three edges with dodecahedral angle
-            phi = (1 + np.sqrt(5)) / 2
-            # Normalize the three edge directions
-            edges = [
-                np.array([phi, 0.0, 1.0]),
-                np.array([1.0, phi, 0.0]),
-                np.array([0.0, 1.0, phi])
-            ]
-            edges = [e / np.linalg.norm(e) for e in edges]
-            return edges
-
-        # Fallback
-        else:
-            edges = []
-            for i in range(count):
-                angle = np.radians(i * 360 / count)
-                edges.append(np.array([np.cos(angle), np.sin(angle), 0.2]))
-            return edges
-
-    def _create_regular_polygon_between_edges(self, e1: np.ndarray, e2: np.ndarray, n: int) -> list:
-        """Create regular n-gon with origin as one vertex and e1, e2 as two edges"""
+    def _create_regular_ngon(self, n: int, edge_length: float) -> List[np.ndarray]:
+        """
+        Create a regular n-sided polygon with one vertex at origin.
+        All edges have the specified length.
+        Returns vertices in local coordinates (before rotation/tilt).
+        """
         origin = np.array([0.0, 0.0, 0.0])
 
         if n == 3:
-            # Equilateral triangle
-            return [origin, e1, e2]
+            # Equilateral triangle: one vertex at origin, one along +x axis
+            # Third vertex at 60° to make equilateral
+            verts = [
+                origin,
+                np.array([edge_length, 0.0, 0.0]),
+                np.array([edge_length * np.cos(np.radians(60)),
+                         edge_length * np.sin(np.radians(60)),
+                         0.0])
+            ]
+            return verts
 
         elif n == 4:
-            # Square: fourth vertex at e1 + e2
-            return [origin, e1, e1 + e2, e2]
+            # Square: one vertex at origin
+            verts = [
+                origin,
+                np.array([edge_length, 0.0, 0.0]),
+                np.array([edge_length, edge_length, 0.0]),
+                np.array([0.0, edge_length, 0.0])
+            ]
+            return verts
 
         elif n == 5:
-            # Regular pentagon
-            # Calculate the other 2 vertices to make a regular pentagon
-            # Use the fact that in a regular pentagon from one vertex,
-            # the angle between consecutive sides is 108°
-
-            # Edge length
-            side_len = np.linalg.norm(e1)
-
-            # Create orthonormal basis in the plane of the polygon
-            u = e1 / np.linalg.norm(e1)
-
-            # Find perpendicular direction in plane containing origin, e1, e2
-            normal = np.cross(e1, e2)
-            if np.linalg.norm(normal) < 1e-10:
-                # Degenerate case
-                return [origin, e1, e2]
-            normal = normal / np.linalg.norm(normal)
-
-            # v is perpendicular to u in the plane
-            v = np.cross(normal, u)
-            v = v / np.linalg.norm(v)
-
-            # For regular pentagon with one vertex at origin:
-            # angles from first edge are 0°, 72°, 144°, 216°, 288°
-            # But we want vertices at 0, 108, 216, 324, which connects back
-            # Actually for a pentagon fan from origin: 0, 108, 216, 324
-
+            # Regular pentagon: one vertex at origin
+            # Interior angle = 108°
             verts = [origin]
-            for i in range(5):
-                angle = np.radians(i * 72)  # Pentagon vertices at 72° intervals
-                pt = side_len * (np.cos(angle) * u + np.sin(angle) * v)
-                verts.append(pt)
+            verts.append(np.array([edge_length, 0.0, 0.0]))
 
-            # Return the 5 vertices (origin + 4 outer)
-            return verts[:5]
+            # Remaining vertices at 108° intervals
+            angle = 108  # degrees
+            for i in range(1, n - 1):
+                current_angle = np.radians(i * angle)
+                verts.append(np.array([
+                    edge_length * np.cos(current_angle),
+                    edge_length * np.sin(current_angle),
+                    0.0
+                ]))
+
+            return verts
 
         elif n == 6:
-            # Regular hexagon
-            side_len = np.linalg.norm(e1)
-            u = e1 / np.linalg.norm(e1)
-            normal = np.cross(e1, e2)
-            if np.linalg.norm(normal) < 1e-10:
-                return [origin, e1, e2]
-            normal = normal / np.linalg.norm(normal)
-            v = np.cross(normal, u)
-            v = v / np.linalg.norm(v)
-
+            # Regular hexagon: one vertex at origin
+            # Interior angle = 120°
             verts = [origin]
-            for i in range(6):
-                angle = np.radians(i * 60)
-                pt = side_len * (np.cos(angle) * u + np.sin(angle) * v)
-                verts.append(pt)
+            angle = 120  # degrees
 
-            return verts[:6]
+            for i in range(n - 1):
+                current_angle = np.radians(i * angle)
+                verts.append(np.array([
+                    edge_length * np.cos(current_angle),
+                    edge_length * np.sin(current_angle),
+                    0.0
+                ]))
+
+            return verts
 
         else:
-            return [origin, e1, e2]
+            # Generic
+            verts = [origin]
+            interior_angle = (n - 2) * 180 / n
+
+            for i in range(n - 1):
+                angle_rad = np.radians(i * interior_angle)
+                verts.append(np.array([
+                    edge_length * np.cos(angle_rad),
+                    edge_length * np.sin(angle_rad),
+                    0.0
+                ]))
+
+            return verts
 
     def _create_vertex_3d(self, config: dict) -> list:
-        """Create 3D visualization of faces meeting at a vertex"""
+        """Create 3D visualization of faces meeting at a vertex with EQUAL edge lengths"""
         n = config['n']
         count = config['count']
         valid = config.get('valid', True)
@@ -306,28 +228,56 @@ Klíčové poznatky:
 
         traces = []
         origin = np.array([0.0, 0.0, 0.0])
+        edge_length = 1.0  # All edges will have this length
 
-        # Get the actual Platonic solid edge directions
-        edges = self._get_platonic_solid_edges(n, count, planar)
+        # Create faces with regular polygons
+        angular_spacing = 360.0 / count
 
-        # Create polygon faces between consecutive edges
         for i in range(count):
-            e1 = edges[i]
-            e2 = edges[(i + 1) % count]
+            # Rotation angle for this face
+            rotation = np.radians(i * angular_spacing)
 
-            # Use helper to create regular polygon face
-            verts = self._create_regular_polygon_between_edges(e1, e2, n)
+            # Create a regular n-gon in local coordinates
+            polygon_verts = self._create_regular_ngon(n, edge_length)
+
+            # Calculate tilt based on configuration
+            if planar or total_angle == 360:
+                # Flat in xy-plane
+                tilt_angle = 0
+            elif total_angle < 360:
+                # Tilt up - valid 3D
+                deficit = 360 - total_angle
+                tilt_angle = min(70, deficit / count * 1.5)
+            else:
+                # Tilt down/overlap - impossible
+                excess = total_angle - 360
+                tilt_angle = -min(30, excess / count * 0.8)
+
+            # Transform vertices: rotate around z, then tilt
+            transformed_verts = []
+            for v in polygon_verts:
+                # Rotate around z-axis
+                x = v[0] * np.cos(rotation) - v[1] * np.sin(rotation)
+                y = v[0] * np.sin(rotation) + v[1] * np.cos(rotation)
+                z = v[2]
+
+                # Tilt (rotate around y-axis after z-rotation)
+                tilt_rad = np.radians(tilt_angle)
+                x_new = x * np.cos(tilt_rad) - z * np.sin(tilt_rad)
+                z_new = x * np.sin(tilt_rad) + z * np.cos(tilt_rad)
+
+                transformed_verts.append(np.array([x_new, y, z_new]))
 
             # Create mesh
-            x_coords = [v[0] for v in verts]
-            y_coords = [v[1] for v in verts]
-            z_coords = [v[2] for v in verts]
+            x_coords = [v[0] for v in transformed_verts]
+            y_coords = [v[1] for v in transformed_verts]
+            z_coords = [v[2] for v in transformed_verts]
 
-            # Triangulate
+            # Triangulate from origin (vertex 0)
             i_indices = []
             j_indices = []
             k_indices = []
-            for vtx_idx in range(1, len(verts) - 1):
+            for vtx_idx in range(1, len(transformed_verts) - 1):
                 i_indices.append(0)
                 j_indices.append(vtx_idx)
                 k_indices.append(vtx_idx + 1)
@@ -346,9 +296,9 @@ Klíčové poznatky:
             ))
 
             # Add edges
-            for vtx_idx in range(len(verts)):
-                v1 = verts[vtx_idx]
-                v2 = verts[(vtx_idx + 1) % len(verts)]
+            for vtx_idx in range(len(transformed_verts)):
+                v1 = transformed_verts[vtx_idx]
+                v2 = transformed_verts[(vtx_idx + 1) % len(transformed_verts)]
 
                 traces.append(go.Scatter3d(
                     x=[v1[0], v2[0]],
