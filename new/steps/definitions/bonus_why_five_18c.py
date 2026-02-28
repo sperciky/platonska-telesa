@@ -13,9 +13,9 @@ class BonusStep_WhyFive_18C(Step):
 
     def get_metadata(self) -> StepMetadata:
         return StepMetadata(
-            number=18,
+            number=20,
             category='Bonus',
-            title='18c: Důkaz úhlů (vývojový diagram)',
+            title='Důkaz úhlů (vývojový diagram)',
             short_name='Úhly - diagram'
         )
 
