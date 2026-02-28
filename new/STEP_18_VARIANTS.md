@@ -1,6 +1,11 @@
-# Step 18 Variants - Enhanced Angle Proof Visualizations
+# Steps 18-20 - Enhanced Angle Proof Visualizations
 
 Three different approaches to visualizing the mathematical proof that only 5 Platonic solids can exist.
+
+**Step Numbers:**
+- Step 18: Circular angle meters (kruhové měřidlo)
+- Step 19: Interactive table (tabulka)
+- Step 20: Flow diagram (vývojový diagram)
 
 ## Overview
 
@@ -10,7 +15,7 @@ All three variants prove the same mathematical fact using the **angle constraint
 
 ---
 
-## 📊 Step 18a: Kruhové měřidlo (Circular Angle Meters)
+## 📊 Step 18: Kruhové měřidlo (Circular Angle Meters)
 
 **File:** `steps/definitions/bonus_why_five_18a.py`
 
@@ -33,7 +38,7 @@ All three variants prove the same mathematical fact using the **angle constraint
 
 ---
 
-## 📋 Step 18b: Tabulka (Interactive Table)
+## 📋 Step 19: Tabulka (Interactive Table)
 
 **File:** `steps/definitions/bonus_why_five_18b.py`
 
@@ -57,7 +62,7 @@ All three variants prove the same mathematical fact using the **angle constraint
 
 ---
 
-## 🔄 Step 18c: Vývojový diagram (Flow Diagram)
+## 🔄 Step 20: Vývojový diagram (Flow Diagram)
 
 **File:** `steps/definitions/bonus_why_five_18c.py`
 
@@ -84,7 +89,7 @@ All three variants prove the same mathematical fact using the **angle constraint
 
 ## 🎯 Comparison Summary
 
-| Feature | 18a (Circular) | 18b (Table) | 18c (Flow) |
+| Feature | 18 (Circular) | 19 (Table) | 20 (Flow) |
 |---------|---------------|-------------|------------|
 | **Visual style** | Geometric diagrams | Data table | Flow chart |
 | **Best for** | Visual learners | Data analysts | Logical thinkers |
@@ -104,31 +109,30 @@ All three variants prove the same mathematical fact using the **angle constraint
 
 ```bash
 cd new/
-python generate_animations.py --steps 18
+python generate_animations.py --steps 18-20
 ```
 
 This will create:
-- `animations/step_18_Bonus.gif` (variant a)
-- `animations/step_18_Bonus.gif` (variant b)
-- `animations/step_18_Bonus.gif` (variant c)
+- `animations/step_18_Bonus.gif` (circular angle meters)
+- `animations/step_19_Bonus.gif` (interactive table)
+- `animations/step_20_Bonus.gif` (flow diagram)
 
-**Note:** Since all have step number 18, they may overwrite each other. Generate them separately:
+Or generate them individually:
 
 ```bash
-# Generate each separately
-python generate_animations.py --steps 18  # Will generate the last one (18c)
+python generate_animations.py --steps 18  # Circular meters
+python generate_animations.py --steps 19  # Table
+python generate_animations.py --steps 20  # Flow diagram
 ```
-
-Or modify the step numbers in the class metadata to be 18, 19, 20 to avoid conflicts.
 
 ---
 
 ## 📝 Which One to Use?
 
 **Recommendation:** Include **all three** in your presentation!
-- Start with **18c (Flow)** to show the logical proof structure
-- Then **18a (Circular)** to visualize the angle constraint
-- Finally **18b (Table)** for systematic review
+- Start with **Step 20 (Flow)** to show the logical proof structure
+- Then **Step 18 (Circular)** to visualize the angle constraint
+- Finally **Step 19 (Table)** for systematic review
 
 This gives your audience three different "lenses" to understand the proof, ensuring comprehension regardless of learning style.
 
@@ -139,7 +143,7 @@ This gives your audience three different "lenses" to understand the proof, ensur
 All three steps:
 - Inherit from `Step` base class
 - Implement `render_plotly_diagram()` returning a `go.Figure`
-- Use step number `18` (can be changed to avoid conflicts)
+- Use step numbers `18`, `19`, `20` (no conflicts)
 - Category: `'Bonus'`
 - Include Czech language descriptions via `get_description()`
 

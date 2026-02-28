@@ -37,6 +37,9 @@ from steps.definitions.duality_icosahedron_dodecahedron import DualityIcosahedro
 from steps.definitions.duality_tetrahedron_self import DualityTetrahedronSelf
 from steps.definitions.bonus import BonusStep_TriangleCenter
 from steps.definitions.bonus_why_five import BonusStep_WhyOnlyFive
+from steps.definitions.bonus_why_five_18a import BonusStep_WhyFive_18A
+from steps.definitions.bonus_why_five_18b import BonusStep_WhyFive_18B
+from steps.definitions.bonus_why_five_18c import BonusStep_WhyFive_18C
 
 
 def register_all_steps():
@@ -75,6 +78,9 @@ def register_all_steps():
     # Bonus
     registry.register(BonusStep_TriangleCenter())
     registry.register(BonusStep_WhyOnlyFive())
+    registry.register(BonusStep_WhyFive_18A())
+    registry.register(BonusStep_WhyFive_18B())
+    registry.register(BonusStep_WhyFive_18C())
 
 
 def initialize_session_state():

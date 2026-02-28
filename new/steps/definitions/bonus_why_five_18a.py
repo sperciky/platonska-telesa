@@ -16,7 +16,7 @@ class BonusStep_WhyFive_18A(Step):
         return StepMetadata(
             number=18,
             category='Bonus',
-            title='18a: Důkaz úhlů (kruhové měřidlo)',
+            title='Důkaz úhlů (kruhové měřidlo)',
             short_name='Úhly - kruhy'
         )
 
