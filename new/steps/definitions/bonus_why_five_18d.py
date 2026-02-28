@@ -412,10 +412,10 @@ Tato 3D vizualizace ukazuje:
                         z_offset = 0.0  # Keep in plane
                     else:
                         # Overlapping faces: bright red with high transparency
-                        face_color = 'rgba(231, 76, 60, 0.7)'  # Red, slightly more opaque
+                        face_color = 'rgba(231, 76, 60, 0.8)'  # Red, more opaque
                         face_edge_color = 'rgb(192, 57, 43)'
-                        face_opacity = 0.7
-                        z_offset = 0.05  # Lift above plane to make visible!
+                        face_opacity = 0.8
+                        z_offset = 0.15  # Lift above plane to make visible!
 
                     # Create mesh with z-offset for overlapping faces
                     x_coords = [v[0] for v in verts]
