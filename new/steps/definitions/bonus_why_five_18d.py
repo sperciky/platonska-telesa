@@ -128,8 +128,20 @@ Klíčové poznatky:
 
         return fig
 
+    def _rotation_matrix_z(self, angle_deg):
+        """Rotation matrix around z-axis"""
+        angle = np.radians(angle_deg)
+        return np.array([
+            [np.cos(angle), -np.sin(angle), 0],
+            [np.sin(angle), np.cos(angle), 0],
+            [0, 0, 1]
+        ])
+
     def _create_vertex_3d(self, config: dict) -> list:
-        """Create 3D visualization of faces meeting at a vertex"""
+        """Create 3D visualization of faces meeting at a vertex
+
+        Geometry: 'count' edges meet at origin, forming 'count' n-sided faces
+        """
         n = config['n']  # Number of sides of polygon
         count = config['count']  # Number of polygons meeting at vertex
         valid = config.get('valid', True)
@@ -151,81 +163,129 @@ Klíčové poznatky:
             edge_color = 'rgb(192, 57, 43)'
 
         traces = []
+        origin = np.array([0.0, 0.0, 0.0])
 
-        # Vertex at origin
-        vertex = np.array([0, 0, 0])
+        # Step 1: Create 'count' edges emanating from origin
+        # These are arranged symmetrically in azimuth
+        edges = []
+        angular_spacing = 360.0 / count
 
-        # For planar configurations, faces lie in xy-plane
-        # For 3D configurations, faces are tilted up from xy-plane
+        # Elevation: how much edges tilt up from xy-plane
         if planar or total_angle >= 360:
-            # Flat or impossible - arrange in plane
-            angle_step = 360 / count
-            tilt_angle = 0  # Flat
+            elevation = 0  # Flat
         else:
-            # Valid 3D - calculate tilt to form cone
-            angle_step = 360 / count
-            # The cone angle depends on the deficit angle
             deficit = 360 - total_angle
-            # Convert to radians for tilt calculation
-            tilt_angle = deficit / count * 0.8  # Heuristic for visual clarity
+            # More deficit = sharper vertex = higher elevation
+            elevation = min(60, deficit / count * 1.2)  # degrees, capped at 60°
 
-        # Create each face
         for i in range(count):
-            # Rotation angle around z-axis
-            rotation_angle = i * angle_step
+            azimuth = np.radians(i * angular_spacing)
+            elev = np.radians(elevation)
 
-            # Create regular n-gon in local coordinates
-            polygon_points = []
-            for j in range(n):
-                angle = j * (360 / n)
-                x = np.cos(np.radians(angle)) * 0.8
-                y = np.sin(np.radians(angle)) * 0.8
-                polygon_points.append([x, y, 0])
+            edge_end = np.array([
+                np.cos(elev) * np.cos(azimuth),
+                np.cos(elev) * np.sin(azimuth),
+                np.sin(elev)
+            ])
+            edges.append(edge_end)
 
-            # Transform to position
-            transformed_points = []
-            for point in polygon_points:
-                # Tilt up from xy-plane
-                x, y, z = point
-                if not planar and total_angle < 360:
-                    # Rotate around x-axis to tilt
-                    tilt_rad = np.radians(tilt_angle)
-                    y_new = y * np.cos(tilt_rad) - z * np.sin(tilt_rad)
-                    z_new = y * np.sin(tilt_rad) + z * np.cos(tilt_rad)
-                    y, z = y_new, z_new
+        # Step 2: Create polygon faces
+        # Each face connects 'count' edges in a specific pattern
+        # For triangles (n=3): face = [origin, edge_i, edge_i+1]
+        # For squares (n=4): face = [origin, edge_i, edge_i+edge_i+1, edge_i+1]
+        # For pentagons (n=5): more complex
 
-                # Rotate around z-axis
-                rot_rad = np.radians(rotation_angle)
-                x_new = x * np.cos(rot_rad) - y * np.sin(rot_rad)
-                y_new = x * np.sin(rot_rad) + y * np.cos(rot_rad)
+        for i in range(count):
+            e1 = edges[i]
+            e2 = edges[(i + 1) % count]
 
-                transformed_points.append([x_new, y_new, z])
-
-            # Add vertex (origin) to close the pyramid face
-            face_points = [vertex] + transformed_points
-
-            # Create mesh for the face
-            x_coords = [p[0] for p in face_points]
-            y_coords = [p[1] for p in face_points]
-            z_coords = [p[2] for p in face_points]
-
-            # Create triangular faces for the mesh
             if n == 3:
-                # Triangle - simple
-                i_indices = [0, 1, 2]
-                j_indices = [1, 2, 0]
-                k_indices = [2, 0, 1]
-            else:
-                # Polygon - fan triangulation from vertex
-                i_indices = []
-                j_indices = []
-                k_indices = []
-                for idx in range(n):
-                    i_indices.append(0)  # Vertex
-                    j_indices.append(idx + 1)
-                    k_indices.append((idx + 1) % n + 1)
+                # Triangle: origin + 2 consecutive edges
+                verts = [origin.copy(), e1.copy(), e2.copy()]
 
-            # Add face mesh
+            elif n == 4:
+                # Square: origin + edge1 + (edge1+edge2) + edge2
+                # The "far corner" is the sum of the two edge vectors
+                far_corner = e1 + e2
+                verts = [origin.copy(), e1.copy(), far_corner.copy(), e2.copy()]
+
+            elif n == 5:
+                # Pentagon: origin + edge1 + 2 intermediate + edge2
+                # Create a regular pentagon in the plane defined by origin, e1, e2
+                # Define local coordinate system
+                v1 = e1 / np.linalg.norm(e1)  # unit vector along e1
+                # v2 in the plane, perpendicular to v1
+                temp = e2 - np.dot(e2, v1) * v1
+                v2 = temp / np.linalg.norm(temp) if np.linalg.norm(temp) > 1e-10 else np.array([0, 0, 1])
+
+                # Pentagon vertices in polar coordinates (centered at origin)
+                # Interior angle of pentagon = 108°
+                # At the origin, we want angle = 108° between adjacent sides
+                angle_at_origin = interior_angle
+                angular_step = angle_at_origin / (n - 1)  # Divide the angle
+
+                pentagon_verts = [origin.copy()]
+                for j in range(n):
+                    if j == 0:
+                        pentagon_verts.append(e1.copy())
+                    elif j == n - 1:
+                        pentagon_verts.append(e2.copy())
+                    else:
+                        # Intermediate vertex
+                        angle = j * angular_step
+                        # Rotate e1 by 'angle' in the plane
+                        cos_a = np.cos(np.radians(angle))
+                        sin_a = np.sin(np.radians(angle))
+                        # Also scale outward to form regular pentagon
+                        scale = 1.0 / np.cos(np.radians(angular_step / 2))
+                        pt = scale * (cos_a * v1 + sin_a * v2)
+                        pentagon_verts.append(pt)
+
+                verts = pentagon_verts[:-1]  # Remove duplicate of origin
+
+            elif n == 6:
+                # Hexagon: similar to pentagon
+                v1 = e1 / np.linalg.norm(e1)
+                temp = e2 - np.dot(e2, v1) * v1
+                v2 = temp / np.linalg.norm(temp) if np.linalg.norm(temp) > 1e-10 else np.array([0, 0, 1])
+
+                angle_at_origin = interior_angle
+                angular_step = angle_at_origin / (n - 1)
+
+                hexagon_verts = [origin.copy()]
+                for j in range(n):
+                    if j == 0:
+                        hexagon_verts.append(e1.copy())
+                    elif j == n - 1:
+                        hexagon_verts.append(e2.copy())
+                    else:
+                        angle = j * angular_step
+                        cos_a = np.cos(np.radians(angle))
+                        sin_a = np.sin(np.radians(angle))
+                        scale = 1.0 / np.cos(np.radians(angular_step / 2))
+                        pt = scale * (cos_a * v1 + sin_a * v2)
+                        hexagon_verts.append(pt)
+
+                verts = hexagon_verts[:-1]
+
+            else:
+                # Default: just triangle
+                verts = [origin.copy(), e1.copy(), e2.copy()]
+
+            # Create mesh
+            x_coords = [v[0] for v in verts]
+            y_coords = [v[1] for v in verts]
+            z_coords = [v[2] for v in verts]
+
+            # Triangulate
+            i_indices = []
+            j_indices = []
+            k_indices = []
+            for vtx_idx in range(1, len(verts) - 1):
+                i_indices.append(0)
+                j_indices.append(vtx_idx)
+                k_indices.append(vtx_idx + 1)
+
             traces.append(go.Mesh3d(
                 x=x_coords,
                 y=y_coords,
@@ -234,34 +294,22 @@ Klíčové poznatky:
                 j=j_indices,
                 k=k_indices,
                 color=color,
-                opacity=0.8,
-                flatshading=True,
+                opacity=0.75,
+                flatshading=False,
                 hoverinfo='skip'
             ))
 
             # Add edges
-            for idx in range(len(transformed_points)):
-                p1 = transformed_points[idx]
-                p2 = transformed_points[(idx + 1) % len(transformed_points)]
+            for vtx_idx in range(len(verts)):
+                v1 = verts[vtx_idx]
+                v2 = verts[(vtx_idx + 1) % len(verts)]
 
-                # Edge from vertex to polygon point
                 traces.append(go.Scatter3d(
-                    x=[vertex[0], p1[0]],
-                    y=[vertex[1], p1[1]],
-                    z=[vertex[2], p1[2]],
+                    x=[v1[0], v2[0]],
+                    y=[v1[1], v2[1]],
+                    z=[v1[2], v2[2]],
                     mode='lines',
-                    line=dict(color=edge_color, width=3),
-                    hoverinfo='skip',
-                    showlegend=False
-                ))
-
-                # Edge around polygon
-                traces.append(go.Scatter3d(
-                    x=[p1[0], p2[0]],
-                    y=[p1[1], p2[1]],
-                    z=[p1[2], p2[2]],
-                    mode='lines',
-                    line=dict(color=edge_color, width=2),
+                    line=dict(color=edge_color, width=4),
                     hoverinfo='skip',
                     showlegend=False
                 ))
@@ -271,10 +319,12 @@ Klíčové poznatky:
             x=[0],
             y=[0],
             z=[0],
-            mode='markers',
-            marker=dict(size=8, color='black'),
-            hoverinfo='text',
-            text=f'{total_angle:.1f}°',
+            mode='markers+text',
+            marker=dict(size=12, color='darkblue'),
+            text=f'{total_angle:.0f}°',
+            textposition='top center',
+            textfont=dict(size=10, color='black'),
+            hoverinfo='skip',
             showlegend=False
         ))
 
