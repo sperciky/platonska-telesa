@@ -138,53 +138,112 @@ Tato 3D vizualizace ukazuje:
                     adj[i].append(j)
                     adj[j].append(i)
 
-        # Find all pentagon faces
-        faces = self._find_pentagon_faces(vertices, adj)
+        # Find all pentagon faces using exhaustive search
+        faces = self._find_all_pentagon_faces_exhaustive(vertices, adj)
 
         return vertices, faces
 
-    def _find_pentagon_faces(self, vertices: List[np.ndarray], adj: dict) -> List[List[int]]:
-        """Find all pentagon faces in the dodecahedron"""
+    def _find_all_pentagon_faces_exhaustive(self, vertices: List[np.ndarray], adj: dict) -> List[List[int]]:
+        """Find all pentagon faces using exhaustive DFS search"""
         faces = []
         visited_faces = set()
 
+        def dfs_find_cycle(path, target_len):
+            """DFS to find cycles of target length"""
+            if len(path) == target_len:
+                # Check if it closes
+                if path[0] in adj[path[-1]]:
+                    return [path[:]]
+                return []
+
+            current = path[-1]
+            prev = path[-2] if len(path) > 1 else None
+            found_cycles = []
+
+            for neighbor in adj[current]:
+                if neighbor == prev:  # Don't go back
+                    continue
+                if neighbor in path[:-1]:  # Don't revisit (except to close)
+                    continue
+
+                path.append(neighbor)
+                found_cycles.extend(dfs_find_cycle(path, target_len))
+                path.pop()
+
+            return found_cycles
+
+        # Try starting from each vertex and edge
         for start in range(len(vertices)):
             for second in adj[start]:
-                # Try to build a pentagon: start -> second -> ... -> start
-                face = self._build_face_cycle(start, second, adj, target_length=5)
+                if start < second:  # Avoid duplicates
+                    cycles = dfs_find_cycle([start, second], 5)
 
-                if face and len(face) == 5:
-                    # Normalize face (start with smallest index, go in canonical direction)
-                    face_set = frozenset(face)
-                    if face_set not in visited_faces:
-                        # Verify it's planar and regular
-                        if self._is_valid_pentagon([vertices[i] for i in face]):
-                            faces.append(face)
-                            visited_faces.add(face_set)
+                    for cycle in cycles:
+                        face_set = frozenset(cycle)
+                        if face_set not in visited_faces:
+                            # Verify it's a valid pentagon
+                            if self._is_valid_pentagon([vertices[i] for i in cycle]):
+                                faces.append(cycle)
+                                visited_faces.add(face_set)
 
         return faces
 
-    def _build_face_cycle(self, start: int, second: int, adj: dict, target_length: int) -> List[int]:
-        """Build a face cycle starting from start->second"""
+    def _build_face_cycle(self, start: int, second: int, adj: dict, target_length: int, vertices: List[np.ndarray] = None) -> List[int]:
+        """Build a face cycle starting from start->second using geometric selection"""
         face = [start, second]
         current = second
         prev = start
 
-        for _ in range(target_length - 2):
-            # Find next vertex in the cycle (neighbors of current, excluding prev, prefer clockwise)
+        for step in range(target_length - 2):
+            # Find next vertex in the cycle
             candidates = [v for v in adj[current] if v != prev and v not in face]
 
             if not candidates:
                 return None
 
-            # For dodecahedron, each vertex has 3 neighbors
-            # We want to go "around" the face, so pick the right candidate
-            # Use geometric criterion: pick the one that continues the face
             if len(candidates) == 1:
                 next_v = candidates[0]
+            elif vertices is not None:
+                # Use geometric criterion: pick the one that continues the face
+                # in a consistent rotational direction
+                v_prev = vertices[prev]
+                v_curr = vertices[current]
+
+                # Vector from prev to current
+                edge_prev = v_curr - v_prev
+
+                # For each candidate, compute the cross product to determine rotation
+                best_candidate = None
+                best_angle = -1
+
+                for cand in candidates:
+                    v_cand = vertices[cand]
+                    edge_next = v_cand - v_curr
+
+                    # Cross product gives normal to the plane
+                    cross = np.cross(edge_prev, edge_next)
+
+                    # Dot product with current normal estimate
+                    if step == 0:
+                        # First step: just pick based on angle
+                        angle = np.dot(edge_prev, edge_next) / (np.linalg.norm(edge_prev) * np.linalg.norm(edge_next) + 1e-10)
+                    else:
+                        # Later steps: maintain consistent normal direction
+                        if len(face) >= 3:
+                            v0, v1, v2 = vertices[face[0]], vertices[face[1]], vertices[face[2]]
+                            face_normal = np.cross(v1 - v0, v2 - v0)
+                            face_normal = face_normal / (np.linalg.norm(face_normal) + 1e-10)
+                            angle = np.dot(cross, face_normal)
+                        else:
+                            angle = np.linalg.norm(cross)
+
+                    if angle > best_angle:
+                        best_angle = angle
+                        best_candidate = cand
+
+                next_v = best_candidate if best_candidate is not None else candidates[0]
             else:
-                # Pick based on smallest dihedral angle (continuing the face)
-                next_v = candidates[0]  # Simplified
+                next_v = candidates[0]
 
             face.append(next_v)
             prev = current
